@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site Éducatif CP-CM2</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 90%;
+            width: 500px;
+        }
+
+        .main-interface {
+            width: 95%;
+            max-width: 1200px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            font-size: 2em;
+        }
+
+        .welcome-title {
+            color: #2d3748;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        input, select, button {
+            padding: 15px;
+            margin: 10px;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: inherit;
+        }
+
+        button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+        }
+
+        .subjects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .subject-card {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .subject-card:hover {
+            transform: scale(1.05);
+        }
+
+        .videos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .video-card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .video-card:hover {
+            transform: scale(1.02);
+        }
+
+        .video-thumbnail {
+            width: 100%;
+            height: 160px;
+            background: #f7fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: #667eea;
+        }
+
+        .video-info {
+            padding: 15px;
+        }
+
+        .video-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .quiz-container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: left;
+        }
+
+        .quiz-question {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .quiz-options {
+            list-style: none;
+            margin: 15px 0;
+        }
+
+        .quiz-options li {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f7fafc;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .quiz-options li:hover {
+            background: #e2e8f0;
+        }
+
+        .quiz-options li.selected {
+            background: #667eea;
+            color: white;
+        }
+
+        .quiz-options li.correct {
+            background: #48bb78;
+            color: white;
+        }
+
+        .quiz-options li.incorrect {
+            background: #f56565;
+            color: white;
+        }
+
+        .quiz-options li.disabled {
+            cursor: default !important;
+        }
+
+        .back-button {
+            background: #718096;
+            margin: 10px;
+        }
+
+        .story-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            text-align: left;
+            line-height: 1.6;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        audio {
+            width: 100%;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Page d'accueil -->
+    <div id="welcome-page" class="container">
+        <h1>🎓 Bienvenue sur ton site d'apprentissage ! 🎓</h1>
+        
+        <div id="load-profile" style="margin-bottom: 20px;">
+            <h3>As-tu déjà un profil ?</h3>
+            <input type="file" id="profile-file" accept=".json" style="display: none;" onchange="loadProfile()">
+            <button onclick="document.getElementById('profile-file').click()" style="background: #48bb78; margin: 5px;">📁 Charger mon profil</button>
+            <button onclick="showNewProfile()" style="background: #667eea; margin: 5px;">✨ Créer un nouveau profil</button>
+            <button onclick="enterAsGuest()" style="background: #718096; margin: 5px;">👤 Se connecter en tant qu'invité</button>
+        </div>
+        
+        <div id="new-profile" class="hidden">
+            <p>Pour commencer, choisis ton pseudonyme :</p>
+            <input type="text" id="username" placeholder="Ton pseudonyme" maxlength="20">
+            <br>
+            <button onclick="enterSite()">Commencer l'aventure !</button>
+        </div>
+    </div>
+
+    <!-- Interface principale -->
+    <div id="main-interface" class="main-interface hidden">
+        <h1 class="welcome-title">📚 Apprends quelque chose aujourd'hui ! 📚</h1>
+        <p id="welcome-message" style="font-size: 1.2em; margin-bottom: 10px;"></p>
+        <p id="points-display" style="font-size: 1.1em; margin-bottom: 20px; color: #667eea; font-weight: bold;">🏆 Points : 0</p>
+        
+        <div id="class-selection">
+            <h2>Dans quelle classe es-tu ?</h2>
+            <select id="class-select">
+                <option value="">Choisis ta classe</option>
+                <option value="CP">CP</option>
+                <option value="CE1">CE1</option>
+                <option value="CE2">CE2</option>
+                <option value="CM1">CM1</option>
+                <option value="CM2">CM2</option>
+            </select>
+            <br>
+            <button onclick="selectClass()">Valider</button>
+        </div>
+
+        <div id="subjects-section" class="hidden">
+            <div id="save-button-container" style="text-align: right; margin-bottom: 10px;">
+                <button onclick="saveProfile()" style="background: #48bb78; font-size: 12px; padding: 8px 12px;">💾 Sauvegarder mon profil</button>
+            </div>
+            <h2 id="class-title"></h2>
+            <div class="subjects-grid" id="subjects-grid"></div>
+        </div>
+
+        <div id="videos-section" class="hidden">
+            <button class="back-button" onclick="showSubjects()">← Retour aux matières</button>
+            <h2 id="subject-title"></h2>
+            <div class="videos-grid" id="videos-grid"></div>
+        </div>
+
+        <div id="video-player" class="hidden">
+            <button class="back-button" onclick="showVideos()">← Retour aux vidéos</button>
+            <h2 id="video-title"></h2>
+            <div style="text-align: center; margin: 20px 0;">
+                <div class="video-info-card" style="background: white; padding: 20px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); max-width: 800px; margin: 0 auto;">
+                    <!-- Le contenu de la vidéo sera inséré ici par JavaScript -->
+                    <div class="video-thumbnail" style="background: #f7fafc; height: 200px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+                        <span style="font-size: 48px; color: #667eea;">📺</span>
+                    </div>
+                    <p style="margin-bottom: 15px; color: #4a5568;">Sélectionne une vidéo pour la regarder !</p>
+                </div>
+            </div>
+            <button onclick="startQuiz()" style="margin: 20px auto; display: block;">Faire le quiz sur cette vidéo</button>
+        </div>
+
+        <div id="quiz-section" class="hidden">
+            <div class="quiz-container">
+                <button class="back-button" onclick="showVideoPlayer()">← Retour à la vidéo</button>
+                <h2>Quiz : <span id="quiz-title"></span></h2>
+                <div id="quiz-content"></div>
+                <button id="quiz-submit" onclick="submitQuiz()" class="hidden">Voir les résultats</button>
+                <button id="quiz-next" onclick="nextQuestion()" class="hidden">Question suivante</button>
+                <div id="quiz-results" class="hidden">
+                    <h3>Résultats</h3>
+                    <p id="quiz-score"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = '';
+        let currentClass = '';
+        let currentSubject = '';
+        let currentVideo = null;
+        let currentQuizQuestions = [];
+        let currentQuestionIndex = 0;
+        let quizAnswers = [];
+        let userProgress = {};
+        let userPoints = 0;
+        let isGuest = false;
+
+        // Données des vidéos et quiz avec les vrais titres
+        const educationalContent = {
+            CP: {
+                'Mathématiques': [
+                    {
+                        title: 'Comparer et ranger les nombres jusqu\'à 19 - CP',
+                        url: 'https://www.youtube.com/watch?v=n5_B0GdNe-M',
+                        quiz: [
+                            {
+                                question: 'Pour comparer deux nombres, que dois-je regarder en premier ?',
+                                options: ['Les unités', 'Les dizaines', 'Le nombre le plus grand', 'La couleur'],
+                                correct: 1,
+                                explanation: 'Les dizaines sont plus importantes que les unités. Un nombre avec plus de dizaines sera toujours plus grand !'
+                            },
+                            {
+                                question: 'Entre 15 et 16, lequel est le plus grand ?',
+                                options: ['15', '16', 'Ils sont égaux', 'Je ne sais pas'],
+                                correct: 1,
+                                explanation: '16 est plus grand que 15 car il a une unité de plus !'
+                            },
+                            {
+                                question: 'Le signe ">" signifie :',
+                                options: ['Plus petit que', 'Plus grand que', 'Égal à', 'Différent de'],
+                                correct: 1,
+                                explanation: 'Le signe ">" ressemble à une bouche qui mange le plus petit nombre, donc il montre que le nombre de gauche est plus grand !'
+                            }
+                        ]
+                    },
+                    {
+                        title: 'Les doubles - CP CE1',
+                        url: 'https://www.youtube.com/watch?v=G2827u4NpwU',
+                        quiz: [
+                            {
+                                question: 'Qu\'est-ce qu\'un double ?',
+                                options: ['Deux nombres différents', 'Le même nombre ajouté deux fois', 'Un grand nombre', 'Un nombre pair'],
+                                correct: 1,
+                                explanation: 'Un double, c\'est quand on ajoute un nombre à lui-même, comme 3 + 3 = 6 !'
+                            },
+                            {
+                                question: 'Quel est le double de 4 ?',
+                                options: ['6', '7', '8', '9'],
+                                correct: 2,
+                                explanation: 'Le double de 4, c\'est 4 + 4 = 8 !'
+                            },
+                            {
+                                question: 'Comment calcule-t-on le double de 3 ?',
+                                options: ['3 + 1', '3 + 2', '3 + 3', '3 + 4'],
+                                correct: 2,
+                                explanation: 'Pour calculer le double, on ajoute le nombre à lui-même : 3 + 3 !'
+                            }
+                        ]
+                    },
+                    {
+                        title: 'Pair et impair - CP',
+                        url: 'https://www.youtube.com/watch?v=3b3SGjBuKMc',
+                        quiz: [
+                            {
+                                question: 'Comment reconnaît-on un nombre pair ?',
+                                options: ['Il finit par 1, 3, 5, 7 ou 9', 'Il finit par 0, 2, 4, 6 ou 8', 'Il est grand', 'Il est petit'],
+                                correct: 1,
+                                explanation: 'Les nombres pairs finissent toujours par 0, 2, 4, 6 ou 8. On peut les partager en deux groupes égaux !'
+                            },
+                            {
+                                question: 'Le nombre 6 est-il pair ou impair ?',
+                                options: ['Pair', 'Impair', 'Ni l\'un ni l\'autre', 'Je ne sais pas'],
+                                correct: 0,
+                                explanation: '6 est pair car il finit par 6, et on peut faire 6 ÷ 2 = 3 !'
+                            }
+                        ]
+                    },
+                    {
+                        title: 'Soustractions simples - CP',
+                        url: 'https://www.youtube.com/watch?v=-Ga6DhnJPpE',
+                        quiz: [
+                            {
+                                question: 'Combien font 5 - 2 ?',
+                                options: ['2', '3', '4', '5'],
+                                correct: 1,
+                                explanation: 'Si tu as 5 objets et que tu en enlèves 2, il te reste 3 objets !'
+                            },
+                            {
+                                question: 'Qu\'est-ce qu\'une soustraction ?',
+                                options: ['Ajouter des nombres', 'Enlever des objets', 'Compter', 'Multiplier'],
+                                correct: 1,
+                                explanation: 'Une soustraction, c\'est quand on retire ou on enlève des choses !'
+                            }
+                        ]
+                    },
+                    {
+                        title: 'Les unités et dizaines',
+                        url: 'https://www.youtube.com/watch?v=fvHSskq-8_8',
+                        quiz: [
+                            {
+                                question: 'Dans le nombre 23, quel chiffre représente les unités ?',
+                                options: ['2', '3', '23', '20'],
+                                correct: 1,
+                                explanation: 'Dans 23, le chiffre 3 est dans la colonne des unités (à droite) !'
+                            },
+                            {
+                                question: 'Dans le nombre 47, combien y a-t-il de dizaines ?',
+                                options: ['4', '7', '10', '40'],
+                                correct: 0,
+                                explanation: 'Dans 47, il y a 4 dizaines (le chiffre de gauche) !'
+                            },
+                            {
+                                question: 'Que vaut 3 dizaines et 5 unités ?',
+                                options: ['35', '53', '8', '30'],
+                                correct: 0,
+                                explanation: '3 dizaines et 5 unités = 30 + 5 = 35 !'
+                            },
+                            {
+                                question: 'Comment décompose-t-on le nombre 19 ?',
+                                options: ['1 + 9', '10 + 9', '19 + 0', '2 + 7'],
+                                correct: 1,
+                                explanation: '19 = 1 dizaine + 9 unités = 10 + 9 !'
+                            }
+                        ]
+                    },
+                    {
+                        title: 'Les formes géométriques',
+                        url: 'https://www.youtube.com/watch?v=HkcLxx_E7XE',
+                        quiz: [
+                            {
+                                question: 'Combien de côtés a un triangle ?',
+                                options: ['2', '3', '4', '5'],
+                                correct: 1,
+                                explanation: 'Un triangle a toujours 3 côtés et 3 sommets !'
+                            },
+                            {
+                                question: 'Quelle forme a 4 côtés égaux ?',
+                                options: ['Triangle', 'Carré', 'Cercle', 'Rectangle'],
+                                correct: 1,
+                                explanation: 'Un carré a 4 côtés tous égaux et 4 angles droits !'
+                            },
+                            {
+                                question: 'Quelle forme n\'a pas de côtés ?',
+                                options: ['Triangle', 'Carré', 'Cercle', 'Rectangle'],
+                                correct: 2,
+                                explanation: 'Un cercle n\'a pas de côtés, c\'est une forme ronde !'
+                            },
+                            {
+                                question: 'Un rectangle a :',
+                                options: ['3 côtés', '4 côtés égaux', '4 côtés (2 longs, 2 courts)', 'Pas de côtés'],
+                                correct: 2,
+                                explanation: 'Un rectangle a 4 côtés : 2 longs côtés égaux et 2 courts côtés égaux !'
+                            }
+                        ]
+                    },
+                    {
+                        title: 'Les suites de nombres',
+                        url: 'https://www.youtube.com/watch?v=7kdCpfjRfPM',
+                        quiz: [
+                            {
+                                question: 'Dans la suite 2, 4, 6, 8, quel nombre vient après ?',
+                                options: ['9', '10', '11', '12'],
+                                correct: 1,
+                                explanation: 'On ajoute 2 à chaque fois : 2, 4, 6, 8, 10 !'
+                            },
+                            {
+                                question: 'Quelle est la règle de la suite : 1, 3, 5, 7 ?',
+                                options: ['On ajoute 1', 'On ajoute 2', 'On ajoute 3', 'On ajoute 4'],
+                                correct: 1,
+                                explanation: 'On ajoute 2 à chaque fois : 1+2=3, 3+2=5, 5+2=7 !'
+                            },
+                            {
+                                question: 'Continue la suite : 10, 15, 20, 25, ?',
+                                options: ['26', '27', '30', '35'],
+                                correct: 2,
+                                explanation: 'On ajoute 5 à chaque fois : 25 + 5 = 30 !'
+                            },
+                            {
+                                question: 'Dans la suite 5, 10, 15, 20, combien ajoute-t-on à chaque fois ?',
+                                options: ['3', '4', '5', '6'],
+                                correct: 2,
+                                explanation: 'On ajoute 5 : 5+5=10, 10+5=15, 15+5=20 !'
+                            }
+                        ]
+                    },
+                    {
+                        title: 'Les unités de mesure - longueurs',
+                        url: 'https://www.youtube.com/watch?v=n9HIfyMWhwI',
+                        quiz: [
+                            {
+                                question: 'Avec quoi mesure-t-on une longueur ?',
+                                options: ['Une balance', 'Une règle', 'Un thermomètre', 'Une montre'],
+                                correct: 1,
+                                explanation: 'On mesure une longueur avec une règle, un mètre ou un double-mètre !'
+                            },
+                            {
+                                question: 'Quelle est l\'unité pour mesurer les longueurs ?',
+                                options: ['Le kilogramme', 'Le mètre', 'Le litre', 'La seconde'],
+                                correct: 1,
+                                explanation: 'Le mètre est l\'unité principale pour mesurer les longueurs !'
+                            },
+                            {
+                                question: 'Qu\'est-ce qui est le plus long ?',
+                                options: ['1 centimètre', '1 mètre', '1 millimètre', 'Un crayon'],
+                                correct: 1,
+                                explanation: '1 mètre est le plus long : 1 mètre = 100 centimètres = 1000 millimètres !'
+                            }
+                        ]
+                    },
+                    {
+                        title: 'Comparer des longueurs',
+                        url: 'https://www.youtube.com/watch?v=DRhaddgFwHU',
+                        quiz: [
+                            {
+                                question: 'Regarde ces deux lignes : ————————— et ———— Laquelle est la plus longue ?',
+                                options: ['La première ligne', 'La deuxième ligne', 'Elles sont égales', 'On ne peut pas savoir'],
+                                correct: 0,
+                                explanation: 'La première ligne est plus longue car elle a plus de tirets !'
+                            },
+                            {
+                                question: 'Pour comparer deux objets, je peux :',
+                                options: ['Les mettre côte à côte', 'Fermer les yeux', 'Les mélanger', 'Les casser'],
+                                correct: 0,
+                                explanation: 'En mettant les objets côte à côte, on voit facilement lequel est le plus long !'
+                            },
+                            {
+                                question: 'Qu\'est-ce qui est le plus long ?',
+                                options: ['📏 Une règle', '✏️ Un crayon', '📎 Un trombone', '🔍 Une loupe'],
+                                correct: 0,
+                                explanation: 'Une règle est plus longue qu\'un crayon, un trombone ou une loupe !'
+                            },
+                            {
+                                question: 'Entre 🚗 une voiture et 🚲 un vélo, qu\'est-ce qui est le plus long ?',
+                                options: ['🚗 La voiture', '🚲 Le vélo', 'C\'est pareil', 'Je ne sais pas'],
+                                correct: 0,
+                                explanation: 'Une voiture est plus longue qu\'un vélo !'
+                            }
+                        ]
+                    }
+                ],
+                'Français': [
+                    {
+                        title: 'La phrase - CP',
+                        url: 'https://www.youtube.com/watch?v=KoR3qJK_wEc',
+                        quiz: [
+                            {
+                                question: 'Comment commence une phrase ?',
+                                options: ['Par une minuscule', 'Par une majuscule', 'Par un point', 'Par une virgule'],
+                                correct: 1,
+                                explanation: 'Une phrase commence toujours par une lettre majuscule !'
+                            },
+                            {
+                                question: 'Comment se termine une phrase ?',
+                                options: ['Par une majuscule', 'Par une virgule', 'Par un point', 'Par un mot'],
+                                correct: 2,
+                                explanation: 'Une phrase se termine toujours par un point pour montrer qu\'elle est finie !'
+                            }
+                        ]
+                    },
+                    {
+                        title: 'Les types de phrases - CP',
+                        url: 'https://www.youtube.com/watch?v=aGW2DfMLhCY',
+                        quiz: [
+                            {
+                                question: 'Comment se termine une phrase interrogative ?',
+                                options: ['Par un point', 'Par un point d\'exclamation', 'Par un point d\'interrogation', 'Par une virgule'],
+                                correct: 2,
+                                explanation: 'Une phrase interrogative se termine par un point d\'interrogation (?) car on pose une question !'
+                            },
+                            {
+                                question: 'Quelle phrase est interrogative ?',
+                                options: ['Tu viens jouer.', 'Comme c\'est beau !', 'Veux-tu jouer ?', 'Viens ici.'],
+                                correct: 2,
+                                explanation: '"Veux-tu jouer ?" est une question, donc une phrase interrogative !'
+                            },
+                            {
+                                question: 'Quel signe utilise-t-on pour une phrase exclamative ?',
+                                options: ['?', '!', '.', ','],
+                                correct: 1,
+                                explanation: 'Le point d\'exclamation (!) montre la surprise, la joie ou l\'étonnement !'
+                            }
+                        ]
+                    },
+                    {
+                        title: 'Le verbe',
+                        url: 'https://www.youtube.com/watch?v=CBGA58qRawU',
+                        quiz: [
+                            {
+                                question: 'Dans la phrase "Le chat mange", quel est le verbe ?',
+                                options: ['Le', 'chat', 'mange', 'Le chat'],
+                                correct: 2,
+                                explanation: 'Le verbe "mange" dit ce que fait le chat. C\'est l\'action !'
+                            },
+                            {
+                                question: 'Qu\'est-ce qu\'un verbe ?',
+                                options: ['Un nom', 'Une action', 'Une couleur', 'Un chiffre'],
+                                correct: 1,
+                                explanation: 'Un verbe exprime une action : courir, manger, dormir, jouer...'
+                            },
+                            {
+                                question: 'Dans "Papa lit un livre", que fait Papa ?',
+                                options: ['Il mange', 'Il lit', 'Il dort', 'Il chante'],
+                                correct: 1,
+                                explanation: 'Papa LIT. "Lire" est le verbe qui montre l\'action de Papa !'
+                            },
+                            {
+                                question: 'Lequel est un verbe ?',
+                                options: ['chien', 'courir', 'rouge', 'maison'],
+                                correct: 1,
+                                explanation: 'Courir est un verbe d\'action. On peut courir !'
+                            }
+                        ]
+                    },
+                    {
+                        title: 'Les lettres et les mots',
+                        url: 'https://www.youtube.com/watch?v=DR_66o6DOeI',
+                        quiz: [
+                            {
+                                question: 'Avec quoi forme-t-on des mots ?',
+                                options: ['Des chiffres', 'Des lettres', 'Des couleurs', 'Des formes'],
+                                correct: 1,
+                                explanation: 'On forme des mots avec des lettres ! Comme C-H-A-T forme le mot CHAT !'
+                            },
+                            {
+                                question: 'Combien y a-t-il de lettres dans l\'alphabet ?',
+                                options: ['24', '25', '26', '27'],
+                                correct: 2,
+                                explanation: 'Il y a 26 lettres dans l\'alphabet français, de A à Z !'
+                            },
+                            {
+                                question: 'Le mot "PAPA" a combien de lettres ?',
+                                options: ['3', '4', '5', '6'],
+                                correct: 1,
+                                explanation: 'PAPA a 4 lettres : P-A-P-A !'
+                            },
+                            {
+                                question: 'Quelles sont les voyelles ?',
+                                options: ['B, C, D, F', 'A, E, I, O, U', 'L, M, N, P', 'R, S, T, V'],
+                                correct: 1,
+                                explanation: 'Les voyelles sont A, E, I, O, U. Toutes les autres lettres sont des consonnes !'
+                            }
+                        ]
+                    },
+                    {
+                        title: 'Singulier et pluriel',
+                        url: 'https://www.youtube.com/watch?v=liuYTks6rCs',
+                        quiz: [
+                            {
+                                question: 'Le mot "chat" est au singulier. Comment écrit-on le pluriel ?',
+                                options: ['chat', 'chats', 'chates', 'chatss'],
+                                correct: 1,
+                                explanation: 'Au pluriel, on ajoute un "s" : chat devient chats !'
+                            },
+                            {
+                                question: 'Qu\'est-ce que le singulier ?',
+                                options: ['Plusieurs objets', 'Un seul objet', 'Beaucoup d\'objets', 'Zéro objet'],
+                                correct: 1,
+                                explanation: 'Le singulier, c\'est quand il y a UN SEUL objet : un chat, une maison !'
+                            },
+                            {
+                                question: 'Le mot "livres" est au pluriel. Comment écrit-on le singulier ?',
+                                options: ['livre', 'livres', 'livress', 'livrer'],
+                                correct: 0,
+                                explanation: 'Au singulier, on enlève le "s" : livres devient livre !'
+                            },
+                            {
+                                question: 'Quand utilise-t-on le pluriel ?',
+                                options: ['Pour un seul objet', 'Pour plusieurs objets', 'Pour les couleurs', 'Pour les chiffres'],
+                                correct: 1,
+                                explanation: 'On utilise le pluriel quand il y a PLUSIEURS objets : des chats, des maisons !'
+                            }
+                        ]
+                    },
+                    {
+                        title: 'Lettres, sons et syllabes',
+                        url: 'https://www.youtube.com/watch?v=ZtfSvJcgNqU',
+                        quiz: [
+                            {
+                                question: 'Quel son fait la lettre "B" ?',
+                                options: ['[p]', '[b]', '[d]', '[t]'],
+                                correct: 1,
+                                explanation: 'La lettre B fait le son [b], comme dans BATEAU ou BÉBÉ !'
+                            },
+                            {
+                                question: 'Combien de syllabes dans le mot "CHOCOLAT" ?',
+                                options: ['2', '3', '4', '5'],
+                                correct: 1,
+                                explanation: 'CHOCOLAT a 3 syllabes : CHO-CO-LAT !'
+                            },
+                            {
+                                question: 'Avec quelle lettre écrit-on le son [f] ?',
+                                options: ['V', 'F', 'P', 'B'],
+                                correct: 1,
+                                explanation: 'Le son [f] s\'écrit avec la lettre F, comme dans FILLE ou FLEUR !'
+                            },
+                            {
+                                question: 'Dans le mot "MAMAN", quelle est la première syllabe ?',
+                                options: ['MA', 'MAN', 'AM', 'AN'],
+                                correct: 0,
+                                explanation: 'La première syllabe de MAMAN est MA. MAMAN = MA-MAN !'
+                            }
+                        ]
+                    },
+                    {
+                        title: 'Les phrases affirmatives et négatives',
+                        url: 'https://www.youtube.com/watch?v=zNHm9LvsxqE',
+                        quiz: [
+                            {
+                                question: 'Quelle phrase est affirmative ?',
+                                options: ['Je ne mange pas.', 'Il ne dort pas.', 'Le chat mange.', 'Tu ne viens pas.'],
+                                correct: 2,
+                                explanation: '"Le chat mange." est affirmative car elle dit OUI, elle affirme quelque chose !'
+                            },
+                            {
+                                question: 'Comment transformer "Il mange" en phrase négative ?',
+                                options: ['Il mange pas', 'Il ne mange pas', 'Il mange non', 'Pas il mange'],
+                                correct: 1,
+                                explanation: 'On ajoute "ne...pas" : Il ne mange pas !'
+                            },
+                            {
+                                question: 'Quelle phrase est négative ?',
+                                options: ['Papa lit.', 'Maman cuisine.', 'Je ne joue pas.', 'Tu cours.'],
+                                correct: 2,
+                                explanation: '"Je ne joue pas" est négative car elle dit NON avec "ne...pas" !'
+                            },
+                            {
+                                question: 'Dans une phrase négative, on utilise :',
+                                options: ['ne...pas', 'très...bien', 'le...la', 'un...une'],
+                                correct: 0,
+                                explanation: 'Pour faire une phrase négative, on utilise "ne...pas" : Je ne veux pas !'
+                            }
+                        ]
+                    },
+                    {
+                        title: 'Le passé, présent et futur',
+                        url: 'https://www.youtube.com/watch?v=R19HiQtL2Rk',
+                        quiz: [
+                            {
+                                question: 'Quelle phrase parle du présent ?',
+                                options: ['Hier, j\'ai joué.', 'Je joue maintenant.', 'Demain, je jouerai.', 'La semaine dernière.'],
+                                correct: 1,
+                                explanation: '"Je joue maintenant" se passe au présent, en ce moment !'
+                            },
+                            {
+                                question: 'Qu\'est-ce que le passé ?',
+                                options: ['Ce qui va arriver', 'Ce qui se passe maintenant', 'Ce qui s\'est déjà passé', 'Ce qui ne se passe jamais'],
+                                correct: 2,
+                                explanation: 'Le passé, c\'est ce qui s\'est déjà passé, avant maintenant !'
+                            },
+                            {
+                                question: 'Quelle phrase parle du futur ?',
+                                options: ['Je mange une pomme.', 'J\'ai mangé une pomme.', 'Je mangerai une pomme.', 'Je ne mange pas.'],
+                                correct: 2,
+                                explanation: '"Je mangerai" parle du futur, de ce qui va se passer plus tard !'
+                            },
+                            {
+                                question: 'Quand dit-on "demain" ?',
+                                options: ['Pour le passé', 'Pour le présent', 'Pour le futur', 'Pour jamais'],
+                                correct: 2,
+                                explanation: '"Demain" parle du futur, de ce qui va arriver !'
+                            }
+                        ]
+                    },
+                    {
+                        title: 'La phrase interrogative',
+                        url: 'https://www.youtube.com/watch?v=-0BnEnS8SRc',
+                        quiz: [
+                            {
+                                question: 'Comment se termine une phrase interrogative ?',
+                                options: ['Par un point .', 'Par un point d\'interrogation ?', 'Par un point d\'exclamation !', 'Par une virgule ,'],
+                                correct: 1,
+                                explanation: 'Une phrase interrogative se termine toujours par un point d\'interrogation ? !'
+                            },
+                            {
+                                question: 'Quelle phrase est interrogative ?',
+                                options: ['Tu joues au ballon.', 'Veux-tu jouer ?', 'Je mange une pomme.', 'Comme c\'est beau !'],
+                                correct: 1,
+                                explanation: '"Veux-tu jouer ?" est une question, donc une phrase interrogative !'
+                            },
+                            {
+                                question: 'À quoi sert une phrase interrogative ?',
+                                options: ['À dire quelque chose', 'À poser une question', 'À donner un ordre', 'À s\'exclamer'],
+                                correct: 1,
+                                explanation: 'Une phrase interrogative sert à poser une question pour avoir une réponse !'
+                            },
+                            {
+                                question: 'Quel mot peut commencer une phrase interrogative ?',
+                                options: ['Le', 'Très', 'Comment', 'Joli'],
+                                correct: 2,
+                                explanation: '"Comment" peut commencer une question : Comment ça va ? !'
+                            }
+                        ]
+                    },
+                    {
+                        title: 'Copier des mots et des phrases',
+                        url: 'https://www.youtube.com/watch?v=Y0dYA4fZjpI',
+                        quiz: [
+                            {
+                                question: 'Pour bien copier un mot, je dois :',
+                                options: ['Écrire très vite', 'Regarder chaque lettre', 'Deviner', 'Copier de mémoire'],
+                                correct: 1,
+                                explanation: 'Pour bien copier, je regarde chaque lettre une par une !'
+                            },
+                            {
+                                question: 'Quand je copie une phrase, je commence par :',
+                                options: ['Une minuscule', 'Une majuscule', 'Un point', 'Une virgule'],
+                                correct: 1,
+                                explanation: 'Une phrase commence toujours par une majuscule !'
+                            },
+                            {
+                                question: 'Quand je copie, je dois faire attention :',
+                                options: ['Aux espaces entre les mots', 'À la couleur', 'À la taille', 'Au bruit'],
+                                correct: 0,
+                                explanation: 'Il faut bien respecter les espaces entre les mots quand on copie !'
+                            },
+                            {
+                                question: 'Pour copier le mot "CHAT", je trace :',
+                                options: ['C-H-A-T', 'T-A-H-C', 'A-T-H-C', 'H-C-A-T'],
+                                correct: 0,
+                                explanation: 'Je copie les lettres dans le bon ordre : C-H-A-T !'
+                            }
+                        ]
+                    },
+                    {
+                        title: 'Histoire : Le loup et les chaussures magiques',
+                        url: 'https://www.youtube.com/watch?v=vrVr81xy-7Q',
+                        quiz: [
+                            {
+                                question: 'Dans l\'histoire, que trouve le loup ?',
+                                options: ['Des chaussures ordinaires', 'Des chaussures magiques', 'Des bottes en cuir', 'Des sandales'],
+                                correct: 1,
+                                explanation: 'Le loup trouve des chaussures magiques qui ont des pouvoirs spéciaux !'
+                            },
+                            {
+                                question: 'Que permettent de faire les chaussures magiques ?',
+                                options: ['De mieux marcher', 'De courir très vite', 'De voler', 'De devenir invisible'],
+                                correct: 1,
+                                explanation: 'Les chaussures magiques permettent au loup de courir très vite !'
+                            },
+                            {
+                                question: 'Comment se termine cette histoire ?',
+                                options: ['Le loup garde les chaussures', 'Le loup rend les chaussures', 'Les chaussures disparaissent', 'Le loup les perd'],
+                                correct: 1,
+                                explanation: 'À la fin, le loup apprend à partager et rend les chaussures magiques !'
+                            },
+                            {
+                                question: 'Quelle leçon apprend le loup ?',
+                                options: ['À être méchant', 'À partager', 'À courir', 'À se cacher'],
+                                correct: 1,
+                                explanation: 'Le loup apprend qu\'il est important de partager avec les autres !'
+                            }
+                        ]
+                    }
+                ],
+                'Histoire-Géographie': [
+                    {
+                        title: 'Pays, océans et continents',
+                        url: 'https://www.youtube.com/watch?v=h_YkcmbRR4Q',
+                        quiz: [
+                            {
+                                question: 'Quelle est la capitale de la France ?',
+                                options: ['Lyon', 'Marseille', 'Paris', 'Bordeaux'],
+                                correct: 2,
+                                explanation: 'Paris est la capitale de la France, c\'est là que vit le Président !'
+                            },
+                            {
+                                question: 'Dans quel pays vivons-nous ?',
+                                options: ['Espagne', 'Italie', 'France', 'Allemagne'],
+                                correct: 2,
+                                explanation: 'Nous vivons en France, notre pays !'
+                            },
+                            {
+                                question: 'Combien y a-t-il de continents ?',
+                                options: ['5', '6', '7', '8'],
+                                correct: 2,
+                                explanation: 'Il y a 7 continents : Europe, Asie, Afrique, Amérique du Nord, Amérique du Sud, Océanie et Antarctique !'
+                            }
+                        ]
+                    },
+                    {
+                        title: 'Les saisons et le temps',
+                        url: 'https://www.youtube.com/watch?v=E44fl8ZjtHM',
+                        quiz: [
+                            {
+                                question: 'Combien y a-t-il de saisons ?',
+                                options: ['3', '4', '5', '6'],
+                                correct: 1
+                            }
+                        ]
+                    },
+                    {
+                        title: 'La France et ses voisins',
+                        url: 'https://www.youtube.com/watch?v=0hYCCSm3qDs',
+                        quiz: [
+                            {
+                                question: 'Quel pays se trouve au sud de la France ?',
+                                options: ['Allemagne', 'Belgique', 'Espagne', 'Italie'],
+                                correct: 2
+                            }
+                        ]
+                    },
+                    {
+                        title: 'Les monuments de France',
+                        url: 'https://www.youtube.com/watch?v=nMX0NbKCWmg',
+                        quiz: [
+                            {
+                                question: 'Quel monument célèbre se trouve à Paris ?',
+                                options: ['Le Colisée', 'La Tour Eiffel', 'Big Ben', 'La Statue de la Liberté'],
+                                correct: 1
+                            }
+                        ]
+                    },
+                    {
+                        title: 'Les régions de France',
+                        url: 'https://www.youtube.com/watch?v=CbnALShWAkc',
+                        quiz: [
+                            {
+                                question: 'Dans quelle région se trouve Paris ?',
+                                options: ['Provence', 'Bretagne', 'Île-de-France', 'Normandie'],
+                                correct: 2
+                            }
+                        ]
+                    },
+                    {
+                        title: 'Se repérer sur une carte',
+                        url: 'https://www.youtube.com/watch?v=8020w5OPi2E',
+                        quiz: [
+                            {
+                                question: 'Sur une carte, le nord se trouve :',
+                                options: ['En bas', 'En haut', 'À droite', 'À gauche'],
+                                correct: 1
+                            }
+                        ]
+                    },
+                    {
+                        title: 'Le temps qui passe - calendrier',
+                        url: 'https://www.youtube.com/watch?v=7c9AGmps8ZA',
+                        quiz: [
+                            {
+                                question: 'Combien y a-t-il de jours dans une semaine ?',
+                                options: ['5', '6', '7', '8'],
+                                correct: 2
+                            }
+                        ]
+                    }
+                ],
+                'Sciences': [
+                    {
+                        title: 'Le corps humain - CP',
+                        url: 'https://www.youtube.com/watch?v=fW8bwgRDxSY',
+                        quiz: [
+                            {
+                                question: 'Avec quoi voyons-nous ?',
+                                options: ['Les oreilles', 'Le nez', 'Les yeux', 'La bouche'],
+                                correct: 2
+                            }
+                        ]
+                    },
+                    {
+                        title: 'Les animaux et leurs petits',
+                        url: 'https://www.youtube.com/watch?v=W7kfkC5Ru6Y',
+                        quiz: [
+                            {
+                                question: 'Comment appelle-t-on le petit du chat ?',
+                                options: ['Le chiot', 'Le chaton', 'Le poussin', 'L\'agneau'],
+                                correct: 1
+                            }
+                        ]
+                    },
+                    {
+                        title: 'Les plantes et la nature',
+                        url: 'https://www.youtube.com/watch?v=PysS4PzQTUg',
+                        quiz: [
+                            {
+                                question: 'De quoi ont besoin les plantes pour grandir ?',
+                                options: ['Du chocolat', 'De l\'eau et du soleil', 'Des bonbons', 'De la télévision'],
+                                correct: 1
+                            }
+                        ]
+                    },
+                    {
+                        title: 'L\'eau dans la nature',
+                        url: 'https://www.youtube.com/watch?v=XSihVvrnK9g',
+                        quiz: [
+                            {
+                                question: 'D\'où vient la pluie ?',
+                                options: ['Des arbres', 'Des nuages', 'De la terre', 'Du soleil'],
+                                correct: 1
+                            }
+                        ]
+                    },
+                    {
+                        title: 'Les matériaux - bois, plastique, métal',
+                        url: 'https://www.youtube.com/watch?v=LHQKXtUxtUQ',
+                        quiz: [
+                            {
+                                question: 'D\'où vient le bois ?',
+                                options: ['Des pierres', 'Des arbres', 'De l\'eau', 'Du sable'],
+                                correct: 1
+                            }
+                        ]
+                    },
+                    {
+                        title: 'Le jour et la nuit',
+                        url: 'https://www.youtube.com/watch?v=ZPqYwqsXQik',
+                        quiz: [
+                            {
+                                question: 'Que voit-on dans le ciel le jour ?',
+                                options: ['La lune', 'Les étoiles', 'Le soleil', 'Rien'],
+                                correct: 2
+                            }
+                        ]
+                    },
+                    {
+                        title: 'Les objets qui flottent ou coulent',
+                        url: 'https://www.youtube.com/watch?v=WmK2CHR31nc',
+                        quiz: [
+                            {
+                                question: 'Que fait une pierre dans l\'eau ?',
+                                options: ['Elle flotte', 'Elle coule', 'Elle disparaît', 'Elle vole'],
+                                correct: 1
+                            }
+                        ]
+                    },
+                    {
+                        title: 'Les êtres vivants et non-vivants',
+                        url: 'https://www.youtube.com/watch?v=BWmoEXCCraM',
+                        quiz: [
+                            {
+                                question: 'Qu\'est-ce qui caractérise un être vivant ?',
+                                options: ['Il bouge', 'Il grandit et se reproduit', 'Il est grand', 'Il est coloré'],
+                                correct: 1
+                            }
+                        ]
+                    }
+                ],
+                'Autres': [
+                    {
+                        title: 'Apprendre en s\'amusant - CP',
+                        url: 'https://www.youtube.com/watch?v=jK_HKdDkLvM',
+                        quiz: [
+                            {
+                                question: 'Pourquoi est-il important d\'apprendre ?',
+                                options: ['Pour avoir de bonnes notes', 'Pour grandir et comprendre le monde', 'Pour faire plaisir aux parents', 'Pour passer le temps'],
+                                correct: 1
+                            }
+                        ]
+                    }
+                ]
+            }
+        };
+
+        // Fonction pour mettre à jour l'affichage des points
+        function updatePointsDisplay() {
+            const pointsElement = document.getElementById('points-display');
+            if (pointsElement) {
+                pointsElement.textContent = `🏆 Points : ${userPoints}`;
+            }
+        }
+
+        // Fonction pour se connecter en tant qu'invité
+        function enterAsGuest() {
+            currentUser = 'Invité';
+            userPoints = 0;
+            isGuest = true;
+            document.getElementById('welcome-page').classList.add('hidden');
+            document.getElementById('main-interface').classList.remove('hidden');
+            document.getElementById('welcome-message').textContent = `Bonjour Invité ! Bienvenue 🎉`;
+            updatePointsDisplay();
+        }
+
+        // Fonction pour afficher le formulaire de nouveau profil
+        function showNewProfile() {
+            document.getElementById('load-profile').classList.add('hidden');
+            document.getElementById('new-profile').classList.remove('hidden');
+        }
+
+        // Fonction pour charger un profil existant
+        function loadProfile() {
+            const fileInput = document.getElementById('profile-file');
+            const file = fileInput.files[0];
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const profile = JSON.parse(e.target.result);
+                        currentUser = profile.username || '';
+                        currentClass = profile.class || '';
+                        userProgress = profile.progress || {};
+                        userPoints = profile.points || 0;
+                        
+                        if (currentUser && currentClass) {
+                            document.getElementById('welcome-page').classList.add('hidden');
+                            document.getElementById('main-interface').classList.remove('hidden');
+                            document.getElementById('welcome-message').textContent = `Bonjour ${currentUser} ! Content de te revoir 😊`;
+                            updatePointsDisplay();
+                            document.getElementById('class-selection').classList.add('hidden');
+                            showSubjects();
+                        } else {
+                            alert('Fichier de profil invalide.');
+                        }
+                    } catch (error) {
+                        alert('Erreur lors du chargement du profil.');
+                    }
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        // Fonction pour entrer dans le site
+        function enterSite() {
+            const username = document.getElementById('username').value.trim();
+            if (username) {
+                currentUser = username;
+                userPoints = 0; // Nouveau utilisateur commence avec 0 points
+                isGuest = false;
+                document.getElementById('welcome-page').classList.add('hidden');
+                document.getElementById('main-interface').classList.remove('hidden');
+                document.getElementById('welcome-message').textContent = `Bonjour ${username} ! Bienvenue 🎉`;
+                updatePointsDisplay();
+                
+                // Sauvegarde automatique du profil
+                setTimeout(() => {
+                    autoSaveProfile();
+                }, 1000);
+            } else {
+                alert('Merci d\'écrire ton pseudonyme !');
+            }
+        }
+
+        // Fonction pour sélectionner la classe
+        function selectClass() {
+            const selectedClass = document.getElementById('class-select').value;
+            if (selectedClass) {
+                currentClass = selectedClass;
+                document.getElementById('class-selection').classList.add('hidden');
+                showSubjects();
+                
+                // Sauvegarde automatique après sélection de classe (seulement si pas invité)
+                if (!isGuest) {
+                    setTimeout(() => {
+                        autoSaveProfile();
+                    }, 1000);
+                }
+            } else {
+                alert('Merci de choisir ta classe !');
+            }
+        }
+
+        // Fonction pour afficher les matières
+        function showSubjects() {
+            document.getElementById('subjects-section').classList.remove('hidden');
+            document.getElementById('videos-section').classList.add('hidden');
+            document.getElementById('video-player').classList.add('hidden');
+            document.getElementById('quiz-section').classList.add('hidden');
+            
+            document.getElementById('class-title').textContent = `Classe de ${currentClass}`;
+            
+            // Masquer le bouton de sauvegarde pour les invités
+            const saveButtonContainer = document.getElementById('save-button-container');
+            if (isGuest) {
+                saveButtonContainer.style.display = 'none';
+            } else {
+                saveButtonContainer.style.display = 'block';
+            }
+            
+            const subjectsGrid = document.getElementById('subjects-grid');
+            subjectsGrid.innerHTML = '';
+            
+            if (educationalContent[currentClass]) {
+                Object.keys(educationalContent[currentClass]).forEach(subject => {
+                    const subjectCard = document.createElement('div');
+                    subjectCard.className = 'subject-card';
+                    subjectCard.textContent = subject;
+                    subjectCard.onclick = () => showVideos(subject);
+                    subjectsGrid.appendChild(subjectCard);
+                });
+            }
+        }
+
+        // Fonction pour extraire l'ID YouTube d'une URL
+        function getYouTubeID(url) {
+            const regex = /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/;
+            const match = url.match(regex);
+            return match ? match[1] : null;
+        }
+
+        // Fonction pour afficher les vidéos
+        function showVideos(subject) {
+            if (subject) currentSubject = subject;
+            
+            document.getElementById('subjects-section').classList.add('hidden');
+            document.getElementById('videos-section').classList.remove('hidden');
+            document.getElementById('video-player').classList.add('hidden');
+            document.getElementById('quiz-section').classList.add('hidden');
+            
+            document.getElementById('subject-title').textContent = currentSubject;
+            
+            const videosGrid = document.getElementById('videos-grid');
+            videosGrid.innerHTML = '';
+            
+            if (educationalContent[currentClass] && educationalContent[currentClass][currentSubject]) {
+                console.log('Affichage des vidéos pour:', currentClass, currentSubject);
+                console.log('Nombre de vidéos:', educationalContent[currentClass][currentSubject].length);
+                
+                educationalContent[currentClass][currentSubject].forEach((video, index) => {
+                    console.log('Création de la carte vidéo:', index, video.title);
+                    
+                    const videoCard = document.createElement('div');
+                    videoCard.className = 'video-card';
+                    videoCard.style.cursor = 'pointer';
+                    
+                    videoCard.innerHTML = `
+                        <div class="video-thumbnail" style="cursor: pointer;">📹</div>
+                        <div class="video-info" style="cursor: pointer;">
+                            <div class="video-title">${video.title}</div>
+                            <p style="font-size: 12px; color: #666; margin-top: 5px;">Cliquez pour regarder la vidéo</p>
+                        </div>
+                    `;
+                    
+                    // Ajouter l'événement de clic APRÈS avoir défini innerHTML
+                    videoCard.addEventListener('click', function(e) {
+                        console.log('CLIC DÉTECTÉ sur la vidéo:', video.title);
+                        console.log('Objet vidéo complet:', video);
+                        currentVideo = video;
+                        console.log('Appel de showVideoPlayer...');
+                        try {
+                            console.log('Avant appel showVideoPlayer');
+                            if (typeof showVideoPlayer === 'function') {
+                                console.log('showVideoPlayer est bien une fonction');
+                                showVideoPlayer(video);
+                            } else {
+                                console.error('showVideoPlayer n\'est pas une fonction!', typeof showVideoPlayer);
+                            }
+                        } catch (error) {
+                            console.error('Erreur dans showVideoPlayer:', error);
+                        }
+                    });
+                    
+                    videosGrid.appendChild(videoCard);
+                    
+                    // Créer un conteneur séparé pour le bouton quiz
+                    const buttonContainer = document.createElement('div');
+                    buttonContainer.style.cssText = `
+                        background: white;
+                        padding: 10px;
+                        border-radius: 0 0 10px 10px;
+                        border-top: 1px solid #e2e8f0;
+                    `;
+                    
+                    const quizButton = document.createElement('button');
+                    quizButton.textContent = '📝 Faire le quiz';
+                    quizButton.style.cssText = `
+                        width: 100%;
+                        padding: 10px;
+                        background: #48bb78;
+                        color: white;
+                        border: none;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        font-size: 14px;
+                    `;
+                    
+                    quizButton.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        console.log('CLIC sur le bouton quiz pour:', video.title);
+                        currentVideo = video;
+                        startQuiz();
+                    });
+                    
+                    buttonContainer.appendChild(quizButton);
+                    videoCard.appendChild(buttonContainer);
+                });
+            } else {
+                console.log('Pas de contenu trouvé pour:', currentClass, currentSubject);
+            }
+        }
+
+        // Fonction pour afficher le lecteur vidéo
+        function showVideoPlayer(video) {
+            currentVideo = video;
+            
+            // Masquer les autres sections et afficher le lecteur vidéo
+            document.getElementById('videos-section').classList.add('hidden');
+            document.getElementById('video-player').classList.remove('hidden');
+            document.getElementById('quiz-section').classList.add('hidden');
+            document.getElementById('subjects-section').classList.add('hidden');
+            
+            // Mettre à jour le titre
+            document.getElementById('video-title').textContent = video.title;
+            
+            // Intégrer la vidéo YouTube directement dans le site
+            const videoContainer = document.querySelector('.video-info-card');
+            const youtubeID = getYouTubeID(video.url);
+            
+            if (youtubeID && videoContainer) {
+                videoContainer.innerHTML = `
+                    <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; background: #000; border-radius: 10px; margin-bottom: 15px;">
+                        <iframe 
+                            src="https://www.youtube.com/embed/${youtubeID}?rel=0&modestbranding=1&showinfo=0&controls=1" 
+                            frameborder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowfullscreen
+                            style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"
+                        ></iframe>
+                    </div>
+                    <p style="color: #4a5568; text-align: center;">Une fois que tu as regardé la vidéo, tu peux faire le quiz ci-dessous !</p>
+                `;
+            } else {
+                videoContainer.innerHTML = `
+                    <p style="color: #e53e3e; text-align: center;">Erreur : Impossible de charger la vidéo</p>
+                    <p style="color: #4a5568; text-align: center;">URL: ${video.url}</p>
+                `;
+            }
+        }
+
+        // Fonction pour ouvrir la vidéo YouTube (plus utilisée mais gardée pour compatibilité)
+        function openVideo() {
+            // Cette fonction n'est plus utilisée car les vidéos sont maintenant intégrées
+            // mais on la garde au cas où
+            if (currentVideo && currentVideo.url) {
+                window.open(currentVideo.url, '_blank');
+            }
+        }
+
+        // Fonction pour démarrer le quiz
+        function startQuiz() {
+            if (currentVideo && currentVideo.quiz) {
+                currentQuizQuestions = currentVideo.quiz;
+                currentQuestionIndex = 0;
+                quizAnswers = [];
+                
+                document.getElementById('video-player').classList.add('hidden');
+                document.getElementById('quiz-section').classList.remove('hidden');
+                document.getElementById('quiz-title').textContent = currentVideo.title;
+                
+                showQuestion();
+            }
+        }
+
+        // Fonction pour afficher une question
+        function showQuestion() {
+            if (currentQuestionIndex < currentQuizQuestions.length) {
+                const question = currentQuizQuestions[currentQuestionIndex];
+                const quizContent = document.getElementById('quiz-content');
+                
+                quizContent.innerHTML = `
+                    <div class="quiz-question">
+                        <h3>Question ${currentQuestionIndex + 1}/${currentQuizQuestions.length}</h3>
+                        <p><strong>${question.question}</strong></p>
+                        <ul class="quiz-options">
+                            ${question.options.map((option, index) => 
+                                `<li onclick="selectAnswer(${index})" data-index="${index}">${option}</li>`
+                            ).join('')}
+                        </ul>
+                    </div>
+                `;
+                
+                document.getElementById('quiz-submit').classList.add('hidden');
+                document.getElementById('quiz-next').classList.add('hidden');
+                document.getElementById('quiz-results').classList.add('hidden');
+            } else {
+                showQuizResults();
+            }
+        }
+
+        // Fonction pour sélectionner une réponse
+        function selectAnswer(answerIndex) {
+            const question = currentQuizQuestions[currentQuestionIndex];
+            const options = document.querySelectorAll('.quiz-options li');
+            
+            // Empêcher de cliquer à nouveau si déjà répondu
+            if (options[0].classList.contains('disabled')) {
+                return;
+            }
+            
+            // Désactiver tous les clics
+            options.forEach(option => {
+                option.classList.add('disabled');
+                option.style.pointerEvents = 'none';
+            });
+            
+            // Marquer la réponse sélectionnée
+            const selectedOption = document.querySelector(`[data-index="${answerIndex}"]`);
+            selectedOption.classList.add('selected');
+            
+            // Enregistrer la réponse
+            quizAnswers[currentQuestionIndex] = answerIndex;
+            
+            // Afficher les bonnes et mauvaises réponses
+            options.forEach((option, index) => {
+                if (index === question.correct) {
+                    option.classList.add('correct');
+                } else if (index === answerIndex && answerIndex !== question.correct) {
+                    option.classList.add('incorrect');
+                }
+            });
+            
+            // Afficher l'explication si la réponse est correcte ou incorrecte
+            const questionDiv = document.querySelector('.quiz-question');
+            let explanationText = '';
+            
+            if (answerIndex === question.correct) {
+                // Ajouter 10 points pour une bonne réponse
+                userPoints += 10;
+                updatePointsDisplay();
+                
+                explanationText = `<div style="background: #c6f6d5; border: 2px solid #48bb78; padding: 15px; border-radius: 8px; margin-top: 15px; color: #22543d;">
+                    <strong>✅ Bonne réponse ! +10 points 🎉</strong><br>
+                    ${question.explanation || 'Bien joué !'}
+                </div>`;
+            } else {
+                explanationText = `<div style="background: #fed7d7; border: 2px solid #f56565; padding: 15px; border-radius: 8px; margin-top: 15px; color: #742a2a;">
+                    <strong>❌ Ce n'est pas la bonne réponse.</strong><br>
+                    La bonne réponse est : <strong>"${question.options[question.correct]}"</strong><br><br>
+                    <strong>Pourquoi ?</strong> ${question.explanation || 'Regarde bien la vidéo pour mieux comprendre !'}
+                </div>`;
+            }
+            
+            questionDiv.insertAdjacentHTML('beforeend', explanationText);
+            
+            // Afficher le bouton suivant ou terminer
+            if (currentQuestionIndex < currentQuizQuestions.length - 1) {
+                document.getElementById('quiz-next').classList.remove('hidden');
+            } else {
+                document.getElementById('quiz-submit').classList.remove('hidden');
+            }
+        }
+
+        // Fonction pour passer à la question suivante
+        function nextQuestion() {
+            currentQuestionIndex++;
+            showQuestion();
+        }
+
+        // Fonction pour soumettre le quiz
+        function submitQuiz() {
+            showQuizResults();
+        }
+
+        // Fonction pour afficher les résultats
+        function showQuizResults() {
+            let score = 0;
+            
+            currentQuizQuestions.forEach((question, index) => {
+                if (quizAnswers[index] === question.correct) {
+                    score++;
+                }
+            });
+            
+            const percentage = Math.round((score / currentQuizQuestions.length) * 100);
+            
+            document.getElementById('quiz-content').innerHTML = '';
+            document.getElementById('quiz-submit').classList.add('hidden');
+            document.getElementById('quiz-next').classList.add('hidden');
+            
+            const resultsDiv = document.getElementById('quiz-results');
+            resultsDiv.classList.remove('hidden');
+            
+            let message = '';
+            if (percentage >= 80) {
+                message = '🎉 Excellent travail !';
+            } else if (percentage >= 60) {
+                message = '👍 Bon travail !';
+            } else {
+                message = '💪 Continue tes efforts !';
+            }
+            
+            document.getElementById('quiz-score').innerHTML = `
+                <strong>Score : ${score}/${currentQuizQuestions.length} (${percentage}%)</strong><br><br>
+                ${message}<br><br>
+                <button onclick="restartQuiz()" style="background: #667eea; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; margin: 5px;">
+                    🔄 Refaire le quiz
+                </button>
+            `;
+        }
+
+        // Fonction pour recommencer le quiz
+        function restartQuiz() {
+            if (currentVideo && currentVideo.quiz) {
+                currentQuizQuestions = currentVideo.quiz;
+                currentQuestionIndex = 0;
+                quizAnswers = [];
+                
+                // Masquer les résultats et recommencer
+                document.getElementById('quiz-results').classList.add('hidden');
+                showQuestion();
+            }
+        }
+
+        // Fonction pour retourner au lecteur vidéo (depuis le quiz)
+        function backToVideoPlayer() {
+            document.getElementById('quiz-section').classList.add('hidden');
+            document.getElementById('video-player').classList.remove('hidden');
+        }
+
+        // Fonction pour sauvegarder automatiquement le profil
+        function autoSaveProfile() {
+            if (!isGuest && currentUser && currentClass) {
+                const profile = {
+                    username: currentUser,
+                    class: currentClass,
+                    progress: userProgress,
+                    points: userPoints,
+                    savedDate: new Date().toISOString()
+                };
+                
+                const dataStr = JSON.stringify(profile, null, 2);
+                const dataBlob = new Blob([dataStr], {type: 'application/json'});
+                
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(dataBlob);
+                link.download = `profil_${currentUser}_${currentClass}.json`;
+                link.click();
+                
+                alert('Profil sauvegardé automatiquement ! 💾');
+            }
+        }
+
+        // Fonction pour sauvegarder le profil manuellement
+        function saveProfile() {
+            if (isGuest) {
+                alert('Les invités ne peuvent pas sauvegarder leur profil ! Créez un compte pour sauvegarder.');
+                return;
+            }
+            
+            const profile = {
+                username: currentUser,
+                class: currentClass,
+                progress: userProgress,
+                points: userPoints,
+                savedDate: new Date().toISOString()
+            };
+            
+            const dataStr = JSON.stringify(profile, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = `profil_${currentUser}_${currentClass}.json`;
+            link.click();
+            
+            alert('Profil sauvegardé ! 💾');
+        }
+    </script>
+</body>
+</html>
