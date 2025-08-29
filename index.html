@@ -69,9 +69,35 @@
             100% { transform: translateY(0); opacity: 1; }
         }
         
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        @keyframes xpGlow {
+            0% { box-shadow: 0 0 5px #3B82F6; }
+            50% { box-shadow: 0 0 20px #3B82F6, 0 0 30px #3B82F6; }
+            100% { box-shadow: 0 0 5px #3B82F6; }
+        }
+        
         /* Interactive Elements */
         .hover-bounce:hover {
             animation: bounce 0.5s;
+        }
+        
+        #xpDisplay {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        #xpDisplay:hover {
+            transform: scale(1.05);
+            animation: xpGlow 1s ease-in-out;
+        }
+        
+        #coinCounter {
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
         
         .hover-zoom {
@@ -304,6 +330,9 @@
                         <a href="#" onclick="openInventory()" class="text-gray-600 hover:text-fun-purple px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">
                             <i class="fas fa-backpack mr-1"></i> Inventaire
                         </a>
+                        <a href="#" onclick="openQuests()" class="text-gray-600 hover:text-fun-blue px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">
+                            <i class="fas fa-scroll mr-1"></i> Quêtes
+                        </a>
                         <a href="#" onclick="openProfileSetup()" class="text-gray-600 hover:text-fun-green px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200">
                             <i class="fas fa-user mr-1"></i> Mon Profil
                         </a>
@@ -312,9 +341,12 @@
 
                 <!-- Coin Counter -->
                 <div class="flex items-center">
-                    <div class="bg-fun-yellow text-white px-4 py-2 rounded-full flex items-center hover-bounce">
+                    <div class="bg-fun-yellow text-white px-3 py-2 rounded-full flex items-center hover-bounce mr-3">
                         <i class="fas fa-coins mr-2 text-lg"></i>
-                        <span class="font-bold" id="coinCounter">50</span>
+                        <span class="font-bold" id="coinCounter">0</span>
+                    </div>
+                    <div class="bg-blue-500 text-white px-3 py-2 rounded-full flex items-center hover-bounce">
+                        <span class="font-bold" id="xpDisplay">⭐0 🏆1</span>
                     </div>
                 </div>
             </div>
@@ -325,7 +357,8 @@
             <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
                 <a href="#" class="text-fun-blue block px-3 py-2 rounded-md text-base font-medium">Accueil</a>
                 <a href="#" onclick="openShop()" class="text-gray-600 hover:text-fun-orange block px-3 py-2 rounded-md text-base font-medium">Boutique</a>
-                <a href="#" onclick="openInventory()" class="text-gray-600 hover:text-fun-purple block px-3 py-2 rounded-md text-base font-medium">Inventaire</a>
+                <a href="#" onclick="openInventory()" class="text-gray-600 hover:text-fun-purple block px-3 py-2 rounded-md text-base font-medium"><i class="fas fa-backpack mr-2"></i>Inventaire</a>
+                <a href="#" onclick="openQuests()" class="text-gray-600 hover:text-fun-blue block px-3 py-2 rounded-md text-base font-medium"><i class="fas fa-scroll mr-2"></i>Quêtes</a>
                 <a href="#" onclick="openProfileSetup()" class="text-gray-600 hover:text-fun-green block px-3 py-2 rounded-md text-base font-medium">Mon Profil</a>
             </div>
         </div>
@@ -482,6 +515,7 @@
                 // Charger les données sauvegardées ou utiliser les valeurs par défaut
                 this.loadGameData();
                 
+                
                 this.quizData = this.initializeQuizData();
                 this.videoData = this.initializeVideoData();
                 this.currentVideo = null;
@@ -499,7 +533,33 @@
                     const savedData = localStorage.getItem('learningPlatformData');
                     if (savedData) {
                         const data = JSON.parse(savedData);
-                        this.coins = data.coins || 50;
+                        
+                        // Nettoyer les données de test si présentes
+                        if (data.coins === 1000 && !data.hasCreatedProfile) {
+                            console.log('🧹 Nettoyage des données de test détectées');
+                            localStorage.removeItem('learningPlatformData');
+                            // Recharger avec des données par défaut
+                            this.coins = 0;
+                            this.studentName = 'Visiteur';
+                            this.studentAge = null;
+                            this.currentCharacter = 'robot';
+                            this.inventory = ['robot'];
+                            this.dailyBonusClaimed = false;
+                            this.selectedClass = 'cp';
+                            this.hasCreatedProfile = false;
+                            this.subjects = {
+                                math: { progress: 0, stars: 0 },
+                                french: { progress: 0, stars: 0 },
+                                science: { progress: 0, stars: 0 },
+                                histgeo: { progress: 0, stars: 0 }
+                            };
+                            this.saveGameData();
+                            this.showNotificationOnLoad('🆕 Données réinitialisées ! Nouveau départ ! 🎮');
+                            return;
+                        }
+                        this.coins = data.coins || 0;
+                        this.xp = data.xp || 0;
+                        this.level = data.level || Math.floor((this.xp || 0) / 100) + 1;
                         this.studentName = data.studentName || 'Visiteur';
                         this.studentAge = data.studentAge || null;
                         this.currentCharacter = data.currentCharacter || 'robot';
@@ -513,11 +573,20 @@
                             science: { progress: 0, stars: 0 },
                             histgeo: { progress: 0, stars: 0 }
                         };
+                        this.questProgress = data.questProgress || 0;
+                        this.completedQuests = data.completedQuests || [];
+                        this.lastQuestDate = data.lastQuestDate || null;
+                        this.currentQuests = data.currentQuests || [];
+                        this.claimedRewards = data.claimedRewards || [];
+                        this.currentChapter = data.currentChapter || 1;
+                        this.unlockedChapters = data.unlockedChapters || [1];
                         console.log('✅ Données chargées !', data);
                         this.showNotificationOnLoad('Bienvenue ' + this.studentName + ' ! Tes données ont été chargées ! 🎮');
                     } else {
                         // Première visite - valeurs par défaut
-                        this.coins = 50;
+                        this.coins = 0;
+                        this.xp = 0;
+                        this.level = 1;
                         this.studentName = 'Visiteur';
                         this.studentAge = null;
                         this.currentCharacter = 'robot';
@@ -531,13 +600,22 @@
                             science: { progress: 0, stars: 0 },
                             histgeo: { progress: 0, stars: 0 }
                         };
+                        this.questProgress = 0;
+                        this.completedQuests = [];
+                        this.lastQuestDate = null;
+                        this.currentQuests = [];
+                        this.claimedRewards = [];
+                        this.currentChapter = 1;
+                        this.unlockedChapters = [1];
                         this.showNotificationOnLoad('Bienvenue ! Clique sur "Mon profil" pour créer ton compte ! 🎓');
                         this.saveGameData();
                     }
                 } catch (error) {
                     console.error('Erreur lors du chargement:', error);
                     // En cas d'erreur, utiliser les valeurs par défaut
-                    this.coins = 50;
+                    this.coins = 0;
+                    this.xp = 0;
+                    this.level = 1;
                     this.studentName = 'Visiteur';
                     this.studentAge = null;
                     this.currentCharacter = 'robot';
@@ -551,6 +629,13 @@
                         science: { progress: 0, stars: 0 },
                         histgeo: { progress: 0, stars: 0 }
                     };
+                    this.questProgress = 0;
+                    this.completedQuests = [];
+                    this.lastQuestDate = null;
+                    this.currentQuests = [];
+                    this.claimedRewards = [];
+                    this.currentChapter = 1;
+                    this.unlockedChapters = [1];
                 }
             }
 
@@ -558,6 +643,8 @@
                 try {
                     const dataToSave = {
                         coins: this.coins,
+                        xp: this.xp,
+                        level: this.level,
                         studentName: this.studentName,
                         studentAge: this.studentAge,
                         currentCharacter: this.currentCharacter,
@@ -565,6 +652,13 @@
                         dailyBonusClaimed: this.dailyBonusClaimed,
                         selectedClass: this.selectedClass,
                         subjects: this.subjects,
+                        questProgress: this.questProgress,
+                        completedQuests: this.completedQuests,
+                        lastQuestDate: this.lastQuestDate,
+                        currentQuests: this.currentQuests,
+                        claimedRewards: this.claimedRewards,
+                        currentChapter: this.currentChapter,
+                        unlockedChapters: this.unlockedChapters,
                         hasCreatedProfile: this.hasCreatedProfile || false,
                         lastSaved: new Date().toISOString()
                     };
@@ -616,9 +710,15 @@
                                 <h4 class="text-xl font-bold text-gray-800 mb-2">${this.studentName}</h4>
                                 <p class="text-gray-600 mb-1">Âge : ${this.studentAge} ans</p>
                                 <p class="text-gray-600 mb-4">Classe : ${this.selectedClass.toUpperCase()}</p>
-                                <div class="flex items-center justify-center gap-2 text-yellow-600">
-                                    <i class="fas fa-coins"></i>
-                                    <span class="font-bold">${this.coins} pièces</span>
+                                <div class="flex items-center justify-center gap-4">
+                                    <div class="flex items-center gap-2 text-yellow-600">
+                                        <i class="fas fa-coins"></i>
+                                        <span class="font-bold">${this.coins} pièces</span>
+                                    </div>
+                                    <div class="flex items-center gap-2 text-blue-600">
+                                        <i class="fas fa-star"></i>
+                                        <span class="font-bold">⭐${this.xp} 🏆${this.level}</span>
+                                    </div>
                                 </div>
                             </div>
                             
@@ -2828,9 +2928,23 @@
                 this.updateDisplay();
             }
 
+            // Mettre à jour l'affichage des pièces et XP
+            updateCoinAndXpDisplay() {
+                const coinCounter = document.getElementById('coinCounter');
+                if (coinCounter) {
+                    coinCounter.textContent = this.coins;
+                }
+                
+                // Mettre à jour l'affichage XP s'il existe
+                const xpDisplay = document.getElementById('xpDisplay');
+                if (xpDisplay) {
+                    xpDisplay.textContent = `⭐${this.xp} 🏆${this.level}`;
+                }
+            }
+
             updateDisplay() {
                 // Mettre à jour le nom et les pièces
-                document.getElementById('coinCounter').textContent = this.coins;
+                this.updateCoinAndXpDisplay();
                 document.getElementById('studentName').textContent = this.studentName;
                 
                 // Mettre à jour l'avatar du personnage
@@ -2849,9 +2963,15 @@
             }
 
             setupEventListeners() {
-                // Coin counter interaction
+                // Coin counter interaction - animation seulement, pas d'ajout de pièces
                 const coinCounter = document.getElementById('coinCounter');
-                coinCounter.addEventListener('click', () => this.animateCoins());
+                coinCounter.addEventListener('click', () => this.animateCoinsDisplay());
+                
+                // XP display interaction - animation pour l'XP
+                const xpDisplay = document.getElementById('xpDisplay');
+                if (xpDisplay) {
+                    xpDisplay.addEventListener('click', () => this.animateXpDisplay());
+                }
 
                 // Subject cards - utiliser un sélecteur plus spécifique
                 const subjectCards = document.querySelectorAll('.hover-zoom.cursor-pointer');
@@ -2899,26 +3019,107 @@
                 avatar.classList.add('floating');
             }
 
-            animateCoins() {
+            // Calculer le niveau basé sur l'XP
+            calculateLevel(xp) {
+                return Math.floor(xp / 100) + 1; // 100 XP par niveau
+            }
+
+            // Ajouter XP et mettre à jour le niveau
+            addXP(amount) {
+                const oldLevel = this.level;
+                this.xp += amount;
+                this.level = this.calculateLevel(this.xp);
+                
+                // Animation XP gagnée
+                const xpDisplay = document.getElementById('xpDisplay');
+                if (xpDisplay && amount > 0) {
+                    xpDisplay.style.transform = 'scale(1.15)';
+                    xpDisplay.style.color = '#3B82F6';
+                    this.createFloatingText(`+${amount}⭐`, xpDisplay, '#3B82F6', 60);
+                    
+                    setTimeout(() => {
+                        xpDisplay.style.transform = 'scale(1)';
+                        xpDisplay.style.color = '';
+                    }, 400);
+                }
+                
+                // Vérifier si le joueur a monté de niveau
+                if (this.level > oldLevel) {
+                    this.showNotification(`🎉 NIVEAU SUPÉRIEUR! Tu es maintenant 🏆${this.level}! +50 pièces bonus! 🎉`);
+                    this.coins += 50;
+                    
+                    // Animation spéciale niveau supérieur
+                    if (xpDisplay) {
+                        xpDisplay.style.animation = 'bounce 0.6s ease-in-out';
+                        setTimeout(() => xpDisplay.style.animation = '', 600);
+                    }
+                    
+                    this.updateCoinAndXpDisplay();
+                }
+                
+                this.saveGameData();
+            }
+
+            animateCoins(amount = 10, xpAmount = 5) {
                 const coinCounter = document.getElementById('coinCounter');
                 const coinIcon = coinCounter.previousElementSibling;
                 
                 coinCounter.style.transform = 'scale(1.2)';
                 coinIcon.style.transform = 'rotateY(360deg)';
                 
-                // Create floating +coins effect
-                this.createFloatingText('+10', coinCounter, '#F59E0B');
+                // Create floating effects
+                this.createFloatingText(`+${amount}💰`, coinCounter, '#F59E0B');
+                if (xpAmount > 0) {
+                    this.createFloatingText(`+${xpAmount}⭐`, coinCounter, '#3B82F6', 50);
+                }
                 
                 setTimeout(() => {
                     coinCounter.style.transform = 'scale(1)';
                     coinIcon.style.transform = 'rotateY(0deg)';
                 }, 600);
                 
-                // Update coin count
-                this.coins += 10;
+                // Update counts
+                this.coins += amount;
+                if (xpAmount > 0) {
+                    this.addXP(xpAmount);
+                }
+                
                 setTimeout(() => {
-                    coinCounter.textContent = this.coins;
+                    this.updateCoinAndXpDisplay();
                 }, 300);
+            }
+
+            animateCoinsDisplay() {
+                const coinCounter = document.getElementById('coinCounter');
+                const coinIcon = coinCounter.previousElementSibling;
+                
+                // Animation seulement, pas d'ajout de pièces
+                coinCounter.style.transform = 'scale(1.2)';
+                coinIcon.style.transform = 'rotateY(360deg)';
+                
+                setTimeout(() => {
+                    coinCounter.style.transform = 'scale(1)';
+                    coinIcon.style.transform = 'rotateY(0deg)';
+                }, 600);
+            }
+
+            animateXpDisplay() {
+                const xpDisplay = document.getElementById('xpDisplay');
+                const xpIcon = xpDisplay.previousElementSibling;
+                
+                // Animation pour l'XP
+                xpDisplay.style.transform = 'scale(1.2)';
+                xpIcon.style.transform = 'rotateZ(360deg)';
+                xpDisplay.style.color = '#FFD700';
+                
+                // Effet de brillance
+                this.createFloatingText('✨⭐✨', xpDisplay, '#FFD700');
+                
+                setTimeout(() => {
+                    xpDisplay.style.transform = 'scale(1)';
+                    xpIcon.style.transform = 'rotateZ(0deg)';
+                    xpDisplay.style.color = '';
+                }, 600);
             }
 
             cardHoverEffect(card) {
@@ -2998,7 +3199,10 @@
                 // Simulate progress increase
                 this.subjects[subject].progress = Math.min(100, this.subjects[subject].progress + 10);
                 this.coins += 20;
-                document.getElementById('coinCounter').textContent = this.coins;
+                this.addXP(10); // 10 XP pour terminer une leçon
+                this.updateCoinAndXpDisplay();
+                this.updateQuestProgress('earn_coins', 'all', 20);
+                this.updateQuestProgress('lesson_complete', subject);
             }
 
             openShop() {
@@ -3186,7 +3390,7 @@
             buyCharacter(character, cost) {
                 if (this.coins >= cost) {
                     this.coins -= cost;
-                    document.getElementById('coinCounter').textContent = this.coins;
+                    this.updateCoinAndXpDisplay();
                     this.currentCharacter = character;
                     
                     // Ajouter le personnage à l'inventaire s'il n'y est pas déjà
@@ -3196,8 +3400,16 @@
                     
                     this.updateCharacterAvatar(character);
                     this.saveGameData();
+                    
+                    // Debug pour vérifier la sauvegarde
+                    console.log('🎮 Achat personnage:', character);
+                    console.log('💰 Pièces restantes:', this.coins);
+                    console.log('🎒 Inventaire:', this.inventory);
+                    
                     this.closeModal();
-                    this.showNotification(`🎉 Personnage ${character} acheté avec succès ! ✨`);
+                    
+                    // Afficher la page spéciale de confirmation
+                    this.showCharacterUnlockPage(character, cost, false);
                 } else {
                     this.showNotification(`💰 Pas assez de pièces ! Il te faut ${cost - this.coins} pièces de plus. 😔`);
                 }
@@ -3207,7 +3419,7 @@
                 const cost = 500;
                 if (this.coins >= cost) {
                     this.coins -= cost;
-                    document.getElementById('coinCounter').textContent = this.coins;
+                    this.updateCoinAndXpDisplay();
                     
                     // Liste de tous les personnages disponibles
                     const allCharacters = [
@@ -3231,7 +3443,9 @@
                     
                     this.saveGameData();
                     this.closeModal();
-                    this.showNotification(`🎁 Coffre mystère ouvert ! Tu as reçu : ${this.getCharacterName(randomCharacter)} ! ✨`);
+                    
+                    // Afficher la page spéciale de confirmation pour coffre mystère
+                    this.showCharacterUnlockPage(randomCharacter, cost, true);
                 } else {
                     this.showNotification(`💰 Pas assez de pièces ! Il te faut ${cost - this.coins} pièces de plus. 😔`);
                 }
@@ -3250,6 +3464,285 @@
                     rainbow: 'Arc-en-ciel 🌈', star: 'Étoile ⭐'
                 };
                 return names[character] || character;
+            }
+
+            showCharacterUnlockPage(character, cost, isFromMysteryBox = false) {
+                // Créer la page de déblocage en plein écran
+                const unlockPage = document.createElement('div');
+                unlockPage.className = 'character-unlock-page';
+                unlockPage.innerHTML = `
+                    <div class="unlock-content">
+                        <div class="unlock-background">
+                            <div class="sparkle-container">
+                                ${[...Array(20)].map(() => '<div class="sparkle"></div>').join('')}
+                            </div>
+                            <div class="unlock-header">
+                                <h1 class="unlock-title">${isFromMysteryBox ? '🎁 COFFRE MYSTÈRE !' : '🎉 NOUVEAU PERSONNAGE !'}</h1>
+                                <p class="unlock-subtitle">${isFromMysteryBox ? 'Tu as reçu...' : 'Félicitations !'}</p>
+                            </div>
+                            <div class="character-showcase">
+                                <div class="character-circle">
+                                    <div class="character-icon">${this.getCharacterIcon(character)}</div>
+                                </div>
+                                <div class="character-info">
+                                    <h2 class="character-name">${this.getCharacterName(character).replace(/[^\w\s]/gi, '')}</h2>
+                                    <p class="character-description">${isFromMysteryBox ? 'Obtenu par coffre mystère !' : `Acheté pour ${cost} pièces`}</p>
+                                </div>
+                            </div>
+                            <div class="unlock-actions">
+                                <button class="unlock-btn-primary" onclick="window.platform.closeCharacterUnlockPage()">
+                                    ✨ Génial ! ✨
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Ajouter les styles CSS pour la page
+                const style = document.createElement('style');
+                style.textContent = `
+                    .character-unlock-page {
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100vw;
+                        height: 100vh;
+                        background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+                        z-index: 10000;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        animation: fadeInUnlock 0.8s ease-out;
+                    }
+
+                    .unlock-content {
+                        text-align: center;
+                        color: white;
+                        max-width: 500px;
+                        padding: 2rem;
+                    }
+
+                    .unlock-background {
+                        position: relative;
+                        background: rgba(255, 255, 255, 0.1);
+                        backdrop-filter: blur(10px);
+                        border-radius: 20px;
+                        padding: 3rem 2rem;
+                        border: 2px solid rgba(255, 255, 255, 0.2);
+                    }
+
+                    .sparkle-container {
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        pointer-events: none;
+                        overflow: hidden;
+                        border-radius: 20px;
+                    }
+
+                    .sparkle {
+                        position: absolute;
+                        width: 4px;
+                        height: 4px;
+                        background: #fff;
+                        border-radius: 50%;
+                        animation: sparkleFloat 3s infinite linear;
+                    }
+
+                    .sparkle:nth-child(odd) {
+                        animation-delay: -1s;
+                        animation-duration: 2s;
+                    }
+
+                    .sparkle:nth-child(even) {
+                        animation-delay: -2s;
+                        animation-duration: 2.5s;
+                    }
+
+                    ${[...Array(20)].map((_, i) => `
+                        .sparkle:nth-child(${i+1}) {
+                            left: ${Math.random() * 100}%;
+                            top: ${Math.random() * 100}%;
+                            animation-delay: ${Math.random() * 3}s;
+                        }
+                    `).join('')}
+
+                    .unlock-title {
+                        font-size: 2.5rem;
+                        font-weight: bold;
+                        margin-bottom: 0.5rem;
+                        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+                        animation: bounceIn 1s ease-out;
+                    }
+
+                    .unlock-subtitle {
+                        font-size: 1.2rem;
+                        margin-bottom: 2rem;
+                        opacity: 0.9;
+                        animation: fadeIn 1s ease-out 0.3s both;
+                    }
+
+                    .character-showcase {
+                        margin: 2rem 0;
+                        animation: scaleIn 1s ease-out 0.6s both;
+                    }
+
+                    .character-circle {
+                        width: 150px;
+                        height: 150px;
+                        margin: 0 auto 1rem;
+                        background: linear-gradient(45deg, #ffd700, #ffed4e);
+                        border-radius: 50%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        animation: pulse 2s infinite, rotateGlow 4s infinite linear;
+                        box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
+                    }
+
+                    .character-icon {
+                        font-size: 4rem;
+                        animation: characterBounce 2s ease-in-out infinite;
+                    }
+
+                    .character-name {
+                        font-size: 2rem;
+                        font-weight: bold;
+                        margin-bottom: 0.5rem;
+                        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+                    }
+
+                    .character-description {
+                        font-size: 1.1rem;
+                        opacity: 0.8;
+                        margin-bottom: 2rem;
+                    }
+
+                    .unlock-btn-primary {
+                        background: linear-gradient(45deg, #ff6b6b, #feca57);
+                        color: white;
+                        border: none;
+                        padding: 1rem 2rem;
+                        font-size: 1.3rem;
+                        font-weight: bold;
+                        border-radius: 50px;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                        animation: glowButton 2s ease-in-out infinite alternate;
+                    }
+
+                    .unlock-btn-primary:hover {
+                        transform: translateY(-2px);
+                        box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+                    }
+
+                    @keyframes fadeInUnlock {
+                        from { opacity: 0; transform: scale(0.8); }
+                        to { opacity: 1; transform: scale(1); }
+                    }
+
+                    @keyframes sparkleFloat {
+                        0% { transform: translateY(100px) rotate(0deg); opacity: 0; }
+                        10% { opacity: 1; }
+                        90% { opacity: 1; }
+                        100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+                    }
+
+                    @keyframes bounceIn {
+                        0% { transform: scale(0.3); opacity: 0; }
+                        50% { transform: scale(1.05); }
+                        70% { transform: scale(0.9); }
+                        100% { transform: scale(1); opacity: 1; }
+                    }
+
+                    @keyframes scaleIn {
+                        from { transform: scale(0); opacity: 0; }
+                        to { transform: scale(1); opacity: 1; }
+                    }
+
+                    @keyframes pulse {
+                        0% { transform: scale(1); }
+                        50% { transform: scale(1.05); }
+                        100% { transform: scale(1); }
+                    }
+
+                    @keyframes rotateGlow {
+                        from { box-shadow: 0 0 30px rgba(255, 215, 0, 0.6); }
+                        50% { box-shadow: 0 0 40px rgba(255, 215, 0, 0.8); }
+                        to { box-shadow: 0 0 30px rgba(255, 215, 0, 0.6); }
+                    }
+
+                    @keyframes characterBounce {
+                        0%, 100% { transform: translateY(0); }
+                        50% { transform: translateY(-10px); }
+                    }
+
+                    @keyframes glowButton {
+                        from { box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4); }
+                        to { box-shadow: 0 4px 25px rgba(255, 107, 107, 0.6); }
+                    }
+
+                    @keyframes fadeIn {
+                        from { opacity: 0; transform: translateY(20px); }
+                        to { opacity: 1; transform: translateY(0); }
+                    }
+
+                    @keyframes fadeOut {
+                        from { opacity: 1; transform: scale(1); }
+                        to { opacity: 0; transform: scale(0.8); }
+                    }
+                `;
+
+                document.head.appendChild(style);
+                document.body.appendChild(unlockPage);
+
+                // Jouer un son si possible (optionnel)
+                this.playUnlockSound();
+            }
+
+            closeCharacterUnlockPage() {
+                const unlockPage = document.querySelector('.character-unlock-page');
+                if (unlockPage) {
+                    unlockPage.style.animation = 'fadeOut 0.5s ease-in';
+                    setTimeout(() => {
+                        unlockPage.remove();
+                        // Supprimer aussi le style ajouté
+                        const unlockStyle = document.querySelector('style:last-child');
+                        if (unlockStyle && unlockStyle.textContent.includes('character-unlock-page')) {
+                            unlockStyle.remove();
+                        }
+                        // Sauvegarde supplémentaire après fermeture de la cinématique
+                        this.saveGameData();
+                        console.log('💾 Sauvegarde après cinématique');
+                    }, 500);
+                }
+            }
+
+            playUnlockSound() {
+                // Créer un son de notification simple avec Web Audio API
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(1200, audioContext.currentTime + 0.1);
+                    oscillator.frequency.exponentialRampToValueAtTime(600, audioContext.currentTime + 0.3);
+                    
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.5);
+                } catch (e) {
+                    // Si l'audio ne fonctionne pas, continuer sans son
+                }
             }
 
             openInventory() {
@@ -3302,6 +3795,1134 @@
                 this.showNotification(`✨ Personnage ${this.getCharacterName(character)} équipé !`);
             }
 
+            openQuests() {
+                // Générer les quêtes quotidiennes si nécessaire
+                this.generateDailyQuests();
+                
+                const questModal = this.createModal(`
+                    <div class="quest-page-container">
+                        <div class="quest-page-content">
+                            <div class="quest-header mb-4">
+                                <h3 class="text-2xl font-bold gradient-text">🗡️ Centre des Quêtes</h3>
+                                <div class="chapter-badge">
+                                    <span class="chapter-text">Chapitre ${this.currentChapter}</span>
+                                    ${this.currentChapter >= 2 ? '<span class="chapter-unlock-badge">🌟 Débloqué</span>' : ''}
+                                </div>
+                            </div>
+                            
+                            <!-- Timeline des récompenses -->
+                            <div class="timeline-container mb-6">
+                                <h4 class="text-lg font-bold mb-3 text-blue-600">🏆 Progression (${this.questProgress} quêtes terminées)</h4>
+                                <div class="timeline-scroll">
+                                    ${this.generateTimeline()}
+                                </div>
+                            </div>
+                            
+                            <!-- Quêtes quotidiennes -->
+                            <div class="daily-quests-container">
+                                <h4 class="text-lg font-bold mb-3 text-green-600">📅 Quêtes Quotidiennes</h4>
+                                <div class="quests-grid">
+                                    ${this.generateQuestCards()}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="quest-footer">
+                            <button class="w-full bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 btn-bounce" onclick="closeModal()">Fermer</button>
+                        </div>
+                    </div>
+                `);
+                
+                // Ajouter les styles CSS pour les quêtes
+                this.addQuestStyles();
+            }
+
+            generateDailyQuests() {
+                const today = new Date().toDateString();
+                
+                console.log('🐛 Debug quêtes:', {
+                    today: today,
+                    lastQuestDate: this.lastQuestDate,
+                    currentQuests: this.currentQuests.length,
+                    questProgress: this.questProgress
+                });
+                
+                // Si c'est un nouveau jour, générer de nouvelles quêtes
+                if (this.lastQuestDate !== today) {
+                    this.lastQuestDate = today;
+                    this.currentQuests = [];
+                    
+                    // Déterminer le niveau basé sur l'âge
+                    const level = this.getEducationLevel();
+                    
+                    // Générer 3 quêtes quotidiennes sans doublons
+                    const questTemplates = this.getQuestTemplates(level);
+                    
+                    // Mélanger les quêtes et prendre les 3 premières (garantit pas de doublons)
+                    const shuffledQuests = [...questTemplates].sort(() => Math.random() - 0.5);
+                    const selectedQuests = shuffledQuests.slice(0, 3);
+                    
+                    selectedQuests.forEach((template, i) => {
+                        this.currentQuests.push({
+                            id: `quest_${today}_${i}`,
+                            title: template.title,
+                            description: template.description,
+                            type: template.type,
+                            subject: template.subject,
+                            reward: template.reward,
+                            completed: false,
+                            progress: 0,
+                            target: template.target || 1
+                        });
+                    });
+                    
+                    this.saveGameData();
+                }
+            }
+
+            getEducationLevel() {
+                // Si l'âge n'est pas défini, utiliser la classe sélectionnée
+                if (!this.studentAge) {
+                    const classMapping = {
+                        'cp': 'CP',
+                        'ce1': 'CE1', 
+                        'ce2': 'CE2',
+                        'cm1': 'CM1',
+                        'cm2': 'CM2'
+                    };
+                    return classMapping[this.selectedClass] || 'CP';
+                }
+                
+                // Déterminer le niveau basé sur l'âge
+                if (this.studentAge <= 6) return 'CP';
+                if (this.studentAge <= 7) return 'CE1';
+                if (this.studentAge <= 8) return 'CE2';
+                if (this.studentAge <= 9) return 'CM1';
+                return 'CM2';
+            }
+
+            getQuestTemplates(level) {
+                const templates = [
+                    // Quêtes mathématiques
+                    {
+                        title: `📊 Maître des Nombres ${level}`,
+                        description: `Complète un quiz de mathématiques niveau ${level}`,
+                        type: 'quiz_complete',
+                        subject: 'math',
+                        reward: { coins: 25, xp: 10 },
+                        target: 1
+                    },
+                    {
+                        title: `🧮 Champion du Calcul`,
+                        description: `Réponds correctement à 5 questions de mathématiques`,
+                        type: 'correct_answers',
+                        subject: 'math',
+                        reward: { coins: 20, xp: 8 },
+                        target: 5
+                    },
+                    {
+                        title: `🔢 As des Chiffres`,
+                        description: `Gagne des pièces en mathématiques`,
+                        type: 'earn_coins',
+                        subject: 'math',
+                        reward: { coins: 15, xp: 5 },
+                        target: 20
+                    },
+                    // Quêtes français
+                    {
+                        title: `📚 Lecteur Assidu ${level}`,
+                        description: `Complète une leçon de français niveau ${level}`,
+                        type: 'lesson_complete',
+                        subject: 'french',
+                        reward: { coins: 25, xp: 10 },
+                        target: 1
+                    },
+                    {
+                        title: `✍️ Maître des Mots`,
+                        description: `Réponds correctement à 3 questions de français`,
+                        type: 'correct_answers',
+                        subject: 'french',
+                        reward: { coins: 15, xp: 6 },
+                        target: 3
+                    },
+                    {
+                        title: `📖 Explorateur Littéraire`,
+                        description: `Complète un quiz de français parfait`,
+                        type: 'perfect_quizzes',
+                        subject: 'french',
+                        reward: { coins: 30, xp: 12 },
+                        target: 1
+                    },
+                    // Quêtes générales
+                    {
+                        title: `🎯 Collectionneur de Pièces`,
+                        description: `Gagne 30 pièces en jouant`,
+                        type: 'earn_coins',
+                        subject: 'all',
+                        reward: { coins: 10, character: 'random' },
+                        target: 30
+                    },
+                    {
+                        title: `🌟 Élève Modèle`,
+                        description: `Complète 2 quiz sans erreur`,
+                        type: 'perfect_quizzes',
+                        subject: 'all',
+                        reward: { coins: 35, xp: 15 },
+                        target: 2
+                    },
+                    {
+                        title: `⚡ Éclair de Génie`,
+                        description: `Réponds correctement à 8 questions`,
+                        type: 'correct_answers',
+                        subject: 'all',
+                        reward: { coins: 25, xp: 10 },
+                        target: 8
+                    },
+                    {
+                        title: `🏆 Chasseur de Trésor`,
+                        description: `Gagne 50 pièces aujourd'hui`,
+                        type: 'earn_coins',
+                        subject: 'all',
+                        reward: { coins: 20, character: 'random' },
+                        target: 50
+                    },
+                    {
+                        title: `📝 Studieux du Jour`,
+                        description: `Complète 2 leçons`,
+                        type: 'lesson_complete',
+                        subject: 'all',
+                        reward: { coins: 30, xp: 12 },
+                        target: 2
+                    },
+                    {
+                        title: `💪 Persévérant`,
+                        description: `Termine 2 quiz (même avec des erreurs)`,
+                        type: 'quiz_complete',
+                        subject: 'all',
+                        reward: { coins: 20, xp: 8 },
+                        target: 2
+                    }
+                ];
+                
+                return templates;
+            }
+
+            generateTimeline() {
+                const milestones = [
+                    { threshold: 0, reward: { coins: 0 }, unlocked: true },
+                    { threshold: 1, reward: { coins: 50 }, unlocked: this.questProgress >= 1 },
+                    { threshold: 3, reward: { coins: 100, character: 'mouse' }, unlocked: this.questProgress >= 3 },
+                    { threshold: 5, reward: { coins: 150 }, unlocked: this.questProgress >= 5 },
+                    { threshold: 10, reward: { coins: 200, character: 'cat' }, unlocked: this.questProgress >= 10 },
+                    { threshold: 15, reward: { coins: 300 }, unlocked: this.questProgress >= 15 },
+                    { threshold: 20, reward: { coins: 500, character: 'dragon' }, unlocked: this.questProgress >= 20 }
+                ];
+                
+                return milestones.map((milestone, index) => {
+                    const isUnlocked = milestone.unlocked;
+                    const isCurrent = this.questProgress === milestone.threshold;
+                    const isPassed = this.questProgress > milestone.threshold;
+                    
+                    let chestClass = 'chest-locked';
+                    let chestIcon = '🔒';
+                    
+                    if (isPassed) {
+                        chestClass = 'chest-completed';
+                        chestIcon = '✅';
+                    } else if (isUnlocked || isCurrent) {
+                        chestClass = 'chest-available';
+                        chestIcon = '📦';
+                    }
+                    
+                    return `
+                        <div class="timeline-item ${chestClass}">
+                            <div class="chest-container" onclick="claimTimelineReward(${index})">
+                                <div class="chest-icon">${chestIcon}</div>
+                                <div class="chest-progress">${milestone.threshold}</div>
+                            </div>
+                            <div class="reward-info">
+                                ${milestone.reward.coins ? `💰 ${milestone.reward.coins}` : ''}
+                                ${milestone.reward.character ? `🎭 ${milestone.reward.character}` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            generateQuestCards() {
+                if (this.currentQuests.length === 0) {
+                    return '<p class="text-center text-gray-500">Aucune quête disponible aujourd\'hui.</p>';
+                }
+                
+                return this.currentQuests.map((quest, index) => {
+                    const progressPercent = (quest.progress / quest.target) * 100;
+                    const isCompleted = quest.completed;
+                    
+                    return `
+                        <div class="quest-card ${isCompleted ? 'quest-completed' : ''}">
+                            <div class="quest-header">
+                                <h5 class="quest-title">${quest.title}</h5>
+                                <div class="quest-reward">
+                                    ${quest.reward.coins ? `💰 ${quest.reward.coins}` : ''}
+                                    ${quest.reward.xp ? `⭐ ${quest.reward.xp} XP` : ''}
+                                    ${quest.reward.character ? `🎭 ${quest.reward.character}` : ''}
+                                </div>
+                            </div>
+                            <p class="quest-description">${quest.description}</p>
+                            <div class="quest-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${progressPercent}%"></div>
+                                </div>
+                                <span class="progress-text">${quest.progress}/${quest.target}</span>
+                            </div>
+                            <div class="quest-actions">
+                                ${isCompleted ? 
+                                    '<button class="quest-btn quest-btn-completed" disabled>✅ Terminé</button>' :
+                                    `<button class="quest-btn quest-btn-start" onclick="startQuest(${index})">🚀 ${progressPercent > 0 ? 'Continuer' : 'Commencer'}</button>`
+                                }
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            addQuestStyles() {
+                if (document.getElementById('quest-styles')) return;
+                
+                const style = document.createElement('style');
+                style.id = 'quest-styles';
+                style.textContent = `
+                    .quest-page-container {
+                        max-width: 900px;
+                        margin: 0 auto;
+                        max-height: 80vh;
+                        display: flex;
+                        flex-direction: column;
+                    }
+                    
+                    .quest-page-content {
+                        flex: 1;
+                        overflow-y: auto;
+                        padding-right: 10px;
+                        scrollbar-width: thin;
+                        scrollbar-color: #cbd5e0 transparent;
+                    }
+                    
+                    .quest-page-content::-webkit-scrollbar {
+                        width: 6px;
+                    }
+                    
+                    .quest-page-content::-webkit-scrollbar-track {
+                        background: transparent;
+                    }
+                    
+                    .quest-page-content::-webkit-scrollbar-thumb {
+                        background: #cbd5e0;
+                        border-radius: 3px;
+                    }
+                    
+                    .quest-page-content::-webkit-scrollbar-thumb:hover {
+                        background: #a0aec0;
+                    }
+                    
+                    .quest-footer {
+                        flex-shrink: 0;
+                        border-top: 1px solid #e2e8f0;
+                        padding-top: 16px;
+                        margin-top: 16px;
+                        background: white;
+                    }
+                    
+                    .quest-header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        flex-wrap: wrap;
+                        gap: 1rem;
+                    }
+                    
+                    .chapter-badge {
+                        display: flex;
+                        align-items: center;
+                        gap: 0.5rem;
+                        background: linear-gradient(135deg, #667eea, #764ba2);
+                        color: white;
+                        padding: 0.5rem 1rem;
+                        border-radius: 20px;
+                        font-size: 0.9rem;
+                        font-weight: bold;
+                        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+                    }
+                    
+                    .chapter-text {
+                        font-size: 1rem;
+                    }
+                    
+                    .chapter-unlock-badge {
+                        background: rgba(255, 215, 0, 0.2);
+                        border: 1px solid rgba(255, 215, 0, 0.5);
+                        border-radius: 12px;
+                        padding: 0.2rem 0.5rem;
+                        font-size: 0.8rem;
+                        animation: glow-badge 2s ease-in-out infinite alternate;
+                    }
+                    
+                    @keyframes glow-badge {
+                        from { box-shadow: 0 0 5px rgba(255, 215, 0, 0.3); }
+                        to { box-shadow: 0 0 15px rgba(255, 215, 0, 0.6); }
+                    }
+                    
+                    .timeline-container {
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        border-radius: 15px;
+                        padding: 20px;
+                        color: white;
+                    }
+                    
+                    .timeline-scroll {
+                        display: flex;
+                        overflow-x: auto;
+                        gap: 20px;
+                        padding: 10px 0;
+                        scrollbar-width: thin;
+                    }
+                    
+                    .timeline-scroll::-webkit-scrollbar {
+                        height: 6px;
+                    }
+                    
+                    .timeline-scroll::-webkit-scrollbar-track {
+                        background: rgba(255,255,255,0.1);
+                        border-radius: 3px;
+                    }
+                    
+                    .timeline-scroll::-webkit-scrollbar-thumb {
+                        background: rgba(255,255,255,0.3);
+                        border-radius: 3px;
+                    }
+                    
+                    .timeline-item {
+                        flex-shrink: 0;
+                        text-align: center;
+                        min-width: 100px;
+                    }
+                    
+                    .chest-container {
+                        cursor: pointer;
+                        transition: transform 0.3s ease;
+                        padding: 10px;
+                        border-radius: 10px;
+                        margin-bottom: 5px;
+                    }
+                    
+                    .chest-container:hover {
+                        transform: scale(1.1);
+                    }
+                    
+                    .chest-icon {
+                        font-size: 2rem;
+                        margin-bottom: 5px;
+                    }
+                    
+                    .chest-progress {
+                        font-weight: bold;
+                        font-size: 14px;
+                    }
+                    
+                    .chest-available {
+                        background: rgba(255,215,0,0.2);
+                        border: 2px solid #ffd700;
+                    }
+                    
+                    .chest-completed {
+                        background: rgba(34,197,94,0.2);
+                        border: 2px solid #22c55e;
+                    }
+                    
+                    .chest-locked {
+                        background: rgba(107,114,128,0.2);
+                        border: 2px solid #6b7280;
+                        opacity: 0.6;
+                    }
+                    
+                    .reward-info {
+                        font-size: 12px;
+                        opacity: 0.9;
+                    }
+                    
+                    .daily-quests-container {
+                        background: #f8fafc;
+                        border-radius: 15px;
+                        padding: 20px;
+                    }
+                    
+                    .quests-grid {
+                        display: grid;
+                        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                        gap: 20px;
+                    }
+                    
+                    .quest-card {
+                        background: white;
+                        border: 2px solid #e2e8f0;
+                        border-radius: 12px;
+                        padding: 20px;
+                        transition: all 0.3s ease;
+                        position: relative;
+                    }
+                    
+                    .quest-card:hover {
+                        border-color: #3b82f6;
+                        transform: translateY(-2px);
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+                    }
+                    
+                    .quest-completed {
+                        background: #f0fdf4;
+                        border-color: #22c55e;
+                    }
+                    
+                    .quest-completed::after {
+                        content: '✅';
+                        position: absolute;
+                        top: 10px;
+                        right: 10px;
+                        font-size: 1.5rem;
+                    }
+                    
+                    .quest-header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: flex-start;
+                        margin-bottom: 10px;
+                    }
+                    
+                    .quest-title {
+                        font-size: 1.1rem;
+                        font-weight: bold;
+                        color: #1f2937;
+                        margin: 0;
+                        flex: 1;
+                        margin-right: 10px;
+                    }
+                    
+                    .quest-reward {
+                        font-size: 0.9rem;
+                        color: #f59e0b;
+                        font-weight: bold;
+                        white-space: nowrap;
+                    }
+                    
+                    .quest-description {
+                        color: #6b7280;
+                        font-size: 0.9rem;
+                        margin-bottom: 15px;
+                        line-height: 1.4;
+                    }
+                    
+                    .quest-progress {
+                        margin-bottom: 15px;
+                    }
+                    
+                    .progress-bar {
+                        width: 100%;
+                        height: 8px;
+                        background: #e2e8f0;
+                        border-radius: 4px;
+                        overflow: hidden;
+                        margin-bottom: 5px;
+                    }
+                    
+                    .progress-fill {
+                        height: 100%;
+                        background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+                        transition: width 0.3s ease;
+                        border-radius: 4px;
+                    }
+                    
+                    .progress-text {
+                        font-size: 0.8rem;
+                        color: #6b7280;
+                        font-weight: bold;
+                    }
+                    
+                    .quest-actions {
+                        text-align: center;
+                    }
+                    
+                    .quest-btn {
+                        padding: 10px 20px;
+                        border: none;
+                        border-radius: 8px;
+                        font-weight: bold;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                        min-width: 120px;
+                    }
+                    
+                    .quest-btn-start {
+                        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+                        color: white;
+                    }
+                    
+                    .quest-btn-start:hover {
+                        transform: translateY(-1px);
+                        box-shadow: 0 4px 8px rgba(59,130,246,0.3);
+                    }
+                    
+                    .quest-btn-completed {
+                        background: #22c55e;
+                        color: white;
+                        opacity: 0.7;
+                        cursor: not-allowed;
+                    }
+                    
+                    @media (max-width: 640px) {
+                        .quest-page-container {
+                            max-height: 85vh;
+                            margin: 0 10px;
+                        }
+                        
+                        .quest-page-content {
+                            padding-right: 5px;
+                        }
+                        
+                        .quests-grid {
+                            grid-template-columns: 1fr;
+                        }
+                        
+                        .timeline-scroll {
+                            padding: 5px 0;
+                        }
+                        
+                        .timeline-item {
+                            min-width: 80px;
+                        }
+                        
+                        .chest-icon {
+                            font-size: 1.5rem;
+                        }
+                        
+                        .timeline-container, .daily-quests-container {
+                            margin-bottom: 20px;
+                        }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+
+            startQuest(questIndex) {
+                const quest = this.currentQuests[questIndex];
+                if (!quest || quest.completed) return;
+                
+                this.closeModal();
+                
+                // Rediriger vers l'activité appropriée selon le type de quête
+                switch (quest.type) {
+                    case 'quiz_complete':
+                    case 'correct_answers':
+                        this.showNotification(`🎯 Quête "${quest.title}" activée ! Commence un quiz ${quest.subject === 'math' ? 'de mathématiques' : 'de français'} !`);
+                        break;
+                    case 'lesson_complete':
+                        this.showNotification(`📚 Quête "${quest.title}" activée ! Commence une leçon !`);
+                        break;
+                    case 'earn_coins':
+                        this.showNotification(`💰 Quête "${quest.title}" activée ! Gagne des pièces en jouant !`);
+                        break;
+                    case 'perfect_quizzes':
+                        this.showNotification(`🌟 Quête "${quest.title}" activée ! Fais des quiz parfaits !`);
+                        break;
+                }
+                
+                this.saveGameData();
+            }
+
+            completeQuest(questIndex, reward) {
+                const quest = this.currentQuests[questIndex];
+                if (!quest || quest.completed) return;
+                
+                quest.completed = true;
+                quest.progress = quest.target;
+                this.questProgress++;
+                
+                // Donner les récompenses
+                if (reward.coins) {
+                    this.coins += reward.coins;
+                    this.updateCoinAndXpDisplay();
+                }
+                if (reward.xp) {
+                    this.addXP(reward.xp);
+                }
+                
+                if (reward.character) {
+                    if (reward.character === 'random') {
+                        // Donner un personnage aléatoire
+                        const characters = ['mouse', 'frog', 'fish', 'bird', 'rabbit', 'turtle'];
+                        const randomChar = characters[Math.floor(Math.random() * characters.length)];
+                        if (!this.inventory.includes(randomChar)) {
+                            this.inventory.push(randomChar);
+                            this.showCharacterUnlockPage(randomChar, 0, true);
+                        }
+                    } else if (!this.inventory.includes(reward.character)) {
+                        this.inventory.push(reward.character);
+                        this.showCharacterUnlockPage(reward.character, 0, true);
+                    }
+                }
+                
+                this.saveGameData();
+                this.showNotification(`🎉 Quête "${quest.title}" terminée ! Récompenses obtenues !`);
+            }
+
+            claimTimelineReward(milestoneIndex) {
+                const milestones = [
+                    { threshold: 0, reward: { coins: 0 }, unlocked: true },
+                    { threshold: 1, reward: { coins: 50 }, unlocked: this.questProgress >= 1 },
+                    { threshold: 3, reward: { coins: 100, character: 'mouse' }, unlocked: this.questProgress >= 3 },
+                    { threshold: 5, reward: { coins: 150 }, unlocked: this.questProgress >= 5 },
+                    { threshold: 10, reward: { coins: 200, character: 'cat' }, unlocked: this.questProgress >= 10 },
+                    { threshold: 15, reward: { coins: 300 }, unlocked: this.questProgress >= 15 },
+                    { threshold: 20, reward: { coins: 500, character: 'dragon' }, unlocked: this.questProgress >= 20 }
+                ];
+                
+                const milestone = milestones[milestoneIndex];
+                if (!milestone || !milestone.unlocked || this.questProgress < milestone.threshold) {
+                    this.showNotification('🔒 Cette récompense n\'est pas encore disponible !');
+                    return;
+                }
+                
+                // Vérifier si déjà réclamée
+                if (!this.claimedRewards) this.claimedRewards = [];
+                if (this.claimedRewards.includes(milestoneIndex)) {
+                    this.showNotification('✅ Cette récompense a déjà été réclamée !');
+                    return;
+                }
+                
+                // Donner les récompenses
+                if (milestone.reward.coins > 0) {
+                    this.coins += milestone.reward.coins;
+                    this.updateCoinAndXpDisplay();
+                }
+                if (milestone.reward.xp) {
+                    this.addXP(milestone.reward.xp);
+                }
+                
+                if (milestone.reward.character) {
+                    if (!this.inventory.includes(milestone.reward.character)) {
+                        this.inventory.push(milestone.reward.character);
+                        this.showCharacterUnlockPage(milestone.reward.character, 0, true);
+                    }
+                }
+                
+                // Marquer comme réclamée
+                this.claimedRewards.push(milestoneIndex);
+                this.saveGameData();
+                
+                this.showNotification(`🏆 Récompense de palier réclamée ! ${milestone.reward.coins ? `+${milestone.reward.coins} pièces` : ''} ${milestone.reward.character ? `+${milestone.reward.character}` : ''}`);
+                
+                // Débloquer le Chapitre 2 si on récupère la récompense du coffre "20" (index 6)
+                if (milestoneIndex === 6 && this.currentChapter === 1) {
+                    this.currentChapter = 2;
+                    this.unlockedChapters.push(2);
+                    this.saveGameData();
+                    
+                    // Déclencher la cinématique du Chapitre 2 avec délai
+                    setTimeout(() => {
+                        this.showChapter2Cinematic();
+                    }, 2000); // 2 secondes après avoir récupéré les récompenses
+                }
+            }
+
+            updateQuestProgress(questType, subject, amount = 1) {
+                if (!this.currentQuests || this.currentQuests.length === 0) return;
+                
+                let questCompleted = false;
+                
+                this.currentQuests.forEach((quest, index) => {
+                    if (quest.completed) return;
+                    
+                    // Vérifier si cette quête correspond au type d'activité
+                    if (quest.type === questType && (quest.subject === subject || quest.subject === 'all' || subject === 'all')) {
+                        quest.progress = Math.min(quest.target, quest.progress + amount);
+                        
+                        // Vérifier si la quête est terminée
+                        if (quest.progress >= quest.target && !quest.completed) {
+                            quest.completed = true;
+                            this.questProgress++;
+                            questCompleted = true;
+                            
+                            // Donner les récompenses
+                            if (quest.reward.coins) {
+                                this.coins += quest.reward.coins;
+                                this.updateCoinAndXpDisplay();
+                            }
+                            if (quest.reward.xp) {
+                                this.addXP(quest.reward.xp);
+                            }
+                            
+                            if (quest.reward.character) {
+                                if (quest.reward.character === 'random') {
+                                    const characters = ['mouse', 'frog', 'fish', 'bird', 'rabbit', 'turtle'];
+                                    const randomChar = characters[Math.floor(Math.random() * characters.length)];
+                                    if (!this.inventory.includes(randomChar)) {
+                                        this.inventory.push(randomChar);
+                                        setTimeout(() => {
+                                            this.showCharacterUnlockPage(randomChar, 0, true);
+                                        }, 1000);
+                                    }
+                                } else if (!this.inventory.includes(quest.reward.character)) {
+                                    this.inventory.push(quest.reward.character);
+                                    setTimeout(() => {
+                                        this.showCharacterUnlockPage(quest.reward.character, 0, true);
+                                    }, 1000);
+                                }
+                            }
+                            
+                            // Notification de quête terminée
+                            setTimeout(() => {
+                                this.showNotification(`🎯 Quête "${quest.title}" terminée ! ${quest.reward.coins ? `+${quest.reward.coins} pièces` : ''} ${quest.reward.xp ? `+${quest.reward.xp} XP` : ''} 🎉`);
+                            }, 500);
+                        }
+                    }
+                });
+                
+                if (questCompleted) {
+                    this.saveGameData();
+                }
+            }
+
+            checkChapterUnlock() {
+                // Chapitre 2 à 20 quêtes (maintenant via timeline)
+                if (this.questProgress >= 20 && this.currentChapter === 1) {
+                    this.currentChapter = 2;
+                    this.unlockedChapters.push(2);
+                    this.saveGameData();
+                    
+                    // Déclencher la cinématique du chapitre 2 avec délai
+                    setTimeout(() => {
+                        this.showChapter2Cinematic();
+                    }, 1500);
+                }
+                
+                // Futurs chapitres...
+                // Chapitre 3 à 50 quêtes, etc.
+            }
+
+            showChapter2Cinematic() {
+                // Créer la cinématique en plein écran
+                const cinematicPage = document.createElement('div');
+                cinematicPage.className = 'chapter-cinematic';
+                cinematicPage.innerHTML = `
+                    <div class="cinematic-content">
+                        <div class="stars-background">
+                            ${[...Array(50)].map(() => '<div class="star"></div>').join('')}
+                        </div>
+                        <div class="cinematic-text-container">
+                            <div class="chapter-announcement" id="chapterText">
+                                <h1 class="cinematic-title">🏆 FÉLICITATIONS ! 🏆</h1>
+                                <p class="cinematic-subtitle">Tu as terminé 20 quêtes avec brio !</p>
+                                <div class="chapter-unlock">
+                                    <div class="chapter-number">CHAPITRE 2</div>
+                                    <div class="chapter-name">🌟 L'AVENTURE CONTINUE 🌟</div>
+                                </div>
+                                <div class="unlock-rewards">
+                                    <p class="reward-text">🎁 Récompenses débloquées :</p>
+                                    <ul class="rewards-list">
+                                        <li>✨ Nouvelles quêtes plus challenging</li>
+                                        <li>🏆 Récompenses améliorées</li>
+                                        <li>🎭 Personnages légendaires accessibles</li>
+                                        <li>💎 Badge "Maître Aventurier"</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <button class="cinematic-continue-btn" onclick="window.platform.closeCinematic()" id="continueBtn" style="opacity: 0;">
+                                ✨ Continuer l'Aventure ✨
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                // Ajouter les styles pour la cinématique
+                const cinematicStyle = document.createElement('style');
+                cinematicStyle.textContent = `
+                    .chapter-cinematic {
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100vw;
+                        height: 100vh;
+                        background: linear-gradient(45deg, #1a1a2e, #16213e, #0f3460);
+                        z-index: 20000;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        animation: cinematicFadeIn 1s ease-out;
+                    }
+
+                    .cinematic-content {
+                        position: relative;
+                        text-align: center;
+                        color: white;
+                        max-width: 800px;
+                        padding: 2rem;
+                    }
+
+                    .stars-background {
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        overflow: hidden;
+                        pointer-events: none;
+                    }
+
+                    .star {
+                        position: absolute;
+                        width: 2px;
+                        height: 2px;
+                        background: #fff;
+                        border-radius: 50%;
+                        animation: twinkle 2s infinite ease-in-out alternate;
+                    }
+
+                    ${[...Array(50)].map((_, i) => `
+                        .star:nth-child(${i+1}) {
+                            left: ${Math.random() * 100}%;
+                            top: ${Math.random() * 100}%;
+                            animation-delay: ${Math.random() * 2}s;
+                            animation-duration: ${1.5 + Math.random() * 1}s;
+                        }
+                    `).join('')}
+
+                    .cinematic-text-container {
+                        position: relative;
+                        z-index: 10;
+                    }
+
+                    .chapter-announcement {
+                        animation: slideUpFade 1.5s ease-out 0.5s both;
+                    }
+
+                    .cinematic-title {
+                        font-size: 3rem;
+                        font-weight: bold;
+                        margin-bottom: 1rem;
+                        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+                        background: linear-gradient(45deg, #ffd700, #ffed4e, #ff6b6b);
+                        -webkit-background-clip: text;
+                        -webkit-text-fill-color: transparent;
+                        background-clip: text;
+                        animation: glow 2s ease-in-out infinite alternate;
+                    }
+
+                    .cinematic-subtitle {
+                        font-size: 1.3rem;
+                        margin-bottom: 2rem;
+                        opacity: 0.9;
+                        animation: slideUpFade 1.5s ease-out 1s both;
+                    }
+
+                    .chapter-unlock {
+                        margin: 3rem 0;
+                        padding: 2rem;
+                        background: rgba(255, 255, 255, 0.1);
+                        backdrop-filter: blur(10px);
+                        border-radius: 20px;
+                        border: 2px solid rgba(255, 215, 0, 0.3);
+                        animation: scaleIn 1s ease-out 1.5s both;
+                    }
+
+                    .chapter-number {
+                        font-size: 4rem;
+                        font-weight: bold;
+                        background: linear-gradient(45deg, #ff6b6b, #feca57, #48cae4);
+                        -webkit-background-clip: text;
+                        -webkit-text-fill-color: transparent;
+                        background-clip: text;
+                        margin-bottom: 0.5rem;
+                        text-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+                    }
+
+                    .chapter-name {
+                        font-size: 1.8rem;
+                        font-weight: bold;
+                        color: #ffd700;
+                        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+                    }
+
+                    .unlock-rewards {
+                        margin-top: 2rem;
+                        animation: slideUpFade 1.5s ease-out 2s both;
+                    }
+
+                    .reward-text {
+                        font-size: 1.2rem;
+                        font-weight: bold;
+                        margin-bottom: 1rem;
+                        color: #48cae4;
+                    }
+
+                    .rewards-list {
+                        list-style: none;
+                        padding: 0;
+                        text-align: left;
+                        max-width: 500px;
+                        margin: 0 auto;
+                    }
+
+                    .rewards-list li {
+                        padding: 0.5rem 0;
+                        font-size: 1.1rem;
+                        opacity: 0;
+                        animation: slideInLeft 0.8s ease-out both;
+                    }
+
+                    .rewards-list li:nth-child(1) { animation-delay: 2.5s; }
+                    .rewards-list li:nth-child(2) { animation-delay: 2.8s; }
+                    .rewards-list li:nth-child(3) { animation-delay: 3.1s; }
+                    .rewards-list li:nth-child(4) { animation-delay: 3.4s; }
+
+                    .cinematic-continue-btn {
+                        background: linear-gradient(45deg, #ff6b6b, #feca57);
+                        color: white;
+                        border: none;
+                        padding: 1rem 3rem;
+                        font-size: 1.3rem;
+                        font-weight: bold;
+                        border-radius: 50px;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                        margin-top: 2rem;
+                        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+                        animation: fadeInUp 1s ease-out 4s both;
+                    }
+
+                    .cinematic-continue-btn:hover {
+                        transform: translateY(-2px);
+                        box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
+                    }
+
+                    @keyframes cinematicFadeIn {
+                        from { opacity: 0; }
+                        to { opacity: 1; }
+                    }
+
+                    @keyframes slideUpFade {
+                        from { opacity: 0; transform: translateY(50px); }
+                        to { opacity: 1; transform: translateY(0); }
+                    }
+
+                    @keyframes scaleIn {
+                        from { opacity: 0; transform: scale(0.5); }
+                        to { opacity: 1; transform: scale(1); }
+                    }
+
+                    @keyframes slideInLeft {
+                        from { opacity: 0; transform: translateX(-30px); }
+                        to { opacity: 1; transform: translateX(0); }
+                    }
+
+                    @keyframes fadeInUp {
+                        from { opacity: 0; transform: translateY(30px); }
+                        to { opacity: 1; transform: translateY(0); }
+                    }
+
+                    @keyframes twinkle {
+                        from { opacity: 0.3; }
+                        to { opacity: 1; }
+                    }
+
+                    @keyframes glow {
+                        from { filter: drop-shadow(0 0 5px rgba(255, 215, 0, 0.5)); }
+                        to { filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.8)); }
+                    }
+
+                    @media (max-width: 640px) {
+                        .cinematic-title {
+                            font-size: 2rem;
+                        }
+                        
+                        .chapter-number {
+                            font-size: 2.5rem;
+                        }
+                        
+                        .chapter-name {
+                            font-size: 1.3rem;
+                        }
+                        
+                        .cinematic-content {
+                            padding: 1rem;
+                        }
+                        
+                        .chapter-unlock {
+                            padding: 1rem;
+                            margin: 2rem 0;
+                        }
+                    }
+                `;
+
+                document.head.appendChild(cinematicStyle);
+                document.body.appendChild(cinematicPage);
+
+                // Jouer un son épique
+                this.playChapterUnlockSound();
+            }
+
+            closeCinematic() {
+                const cinematic = document.querySelector('.chapter-cinematic');
+                if (cinematic) {
+                    cinematic.style.animation = 'cinematicFadeIn 0.5s ease-in reverse';
+                    setTimeout(() => {
+                        cinematic.remove();
+                        // Supprimer aussi le style
+                        const cinematicStyle = document.querySelector('style:last-child');
+                        if (cinematicStyle) {
+                            cinematicStyle.remove();
+                        }
+                    }, 500);
+                }
+            }
+
+            playChapterUnlockSound() {
+                try {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    
+                    // Mélodie épique pour déblocage de chapitre
+                    const notes = [523.25, 659.25, 783.99, 1046.50]; // Do, Mi, Sol, Do (octave)
+                    let noteIndex = 0;
+                    
+                    const playNote = (frequency, duration) => {
+                        const oscillator = audioContext.createOscillator();
+                        const gainNode = audioContext.createGain();
+                        
+                        oscillator.connect(gainNode);
+                        gainNode.connect(audioContext.destination);
+                        
+                        oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+                        oscillator.type = 'triangle';
+                        
+                        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+                        
+                        oscillator.start(audioContext.currentTime);
+                        oscillator.stop(audioContext.currentTime + duration);
+                        
+                        return audioContext.currentTime + duration;
+                    };
+                    
+                    // Jouer la mélodie
+                    let time = audioContext.currentTime;
+                    notes.forEach((note, index) => {
+                        setTimeout(() => {
+                            playNote(note, 0.5);
+                        }, index * 200);
+                    });
+                    
+                } catch (e) {
+                    console.log('Audio not supported');
+                }
+            }
+
             updateCharacterAvatar(character) {
                 const avatar = document.getElementById('characterAvatar');
                 const icons = {
@@ -3350,9 +4971,11 @@
             claimDailyBonus() {
                 if (!this.dailyBonusClaimed) {
                     this.coins += 50;
-                    document.getElementById('coinCounter').textContent = this.coins;
+                    this.addXP(20); // 20 XP pour le bonus quotidien
+                    this.updateCoinAndXpDisplay();
                     this.dailyBonusClaimed = true;
-                    this.showNotification('Bonus quotidien recu! +50 pieces');
+                    this.showNotification('Bonus quotidien reçu! +50💰 +20⭐');
+                    this.updateQuestProgress('earn_coins', 'all', 50);
                     
                     // Update button
                     const bonusButton = document.querySelector('button i.fa-gift').parentElement;
@@ -3398,25 +5021,43 @@
                 });
             }
 
-            createFloatingText(text, element, color) {
+            createFloatingText(text, element, color, offsetX = 10) {
+                // Limiter le nombre d'éléments flottants simultanés
+                const existingFloating = document.querySelectorAll('.floating-text');
+                if (existingFloating.length > 3) {
+                    existingFloating.forEach(el => el.remove());
+                }
+                
                 const floating = document.createElement('div');
                 floating.textContent = text;
-                floating.style.position = 'absolute';
+                floating.className = 'floating-text';
+                floating.style.position = 'fixed'; // Utiliser fixed au lieu d'absolute
                 floating.style.color = color;
                 floating.style.fontWeight = 'bold';
                 floating.style.pointerEvents = 'none';
                 floating.style.zIndex = '1000';
                 floating.style.animation = 'float 2s ease-out forwards';
+                floating.style.fontSize = '16px';
                 
                 const rect = element.getBoundingClientRect();
-                floating.style.left = rect.right + 'px';
+                floating.style.left = rect.right + offsetX + 'px';
                 floating.style.top = rect.top + 'px';
                 
                 document.body.appendChild(floating);
                 
+                // S'assurer que l'élément est supprimé même si l'animation échoue
                 setTimeout(() => {
-                    floating.remove();
+                    if (floating.parentNode) {
+                        floating.parentNode.removeChild(floating);
+                    }
                 }, 2000);
+                
+                // Supprimer également à la fin de l'animation
+                floating.addEventListener('animationend', () => {
+                    if (floating.parentNode) {
+                        floating.parentNode.removeChild(floating);
+                    }
+                });
             }
 
             createModal(content) {
@@ -3762,10 +5403,12 @@
             showDirectQuizResults(correct, question) {
                 const quiz = this.currentQuiz;
                 const coinsEarned = correct ? 10 : 0;
+                const xpEarned = correct ? 5 : 0;
                 
                 if (correct) {
                     this.coins += coinsEarned;
-                    document.getElementById('coinCounter').textContent = this.coins;
+                    this.addXP(xpEarned);
+                    this.updateCoinAndXpDisplay();
                     
                     // Mise à jour des progrès
                     this.subjects[quiz.subject].progress = Math.min(100, this.subjects[quiz.subject].progress + 5);
@@ -3783,7 +5426,7 @@
                             </h3>
                             ${correct ? 
                                 `<div class="bg-green-50 rounded-lg p-4 mb-4">
-                                    <p class="text-green-800 font-semibold mb-2">+${coinsEarned} pièces gagnées !</p>
+                                    <p class="text-green-800 font-semibold mb-2">+${coinsEarned}💰 +${xpEarned}⭐ gagnés !</p>
                                     <p class="text-sm text-green-700">Continue comme ça, tu progresses bien !</p>
                                 </div>` : 
                                 `<div class="bg-red-50 rounded-lg p-4 mb-4">
@@ -3905,6 +5548,13 @@
             selectVideoAnswer(selectedAnswer) {
                 const quiz = this.currentQuiz;
                 const question = quiz.questions[quiz.currentQuestion];
+                
+                // Protection contre les clics multiples
+                if (quiz.answerProcessing || quiz.answers.find(a => a.question === quiz.currentQuestion)) {
+                    return; // Empêcher les réponses multiples pour la même question
+                }
+                quiz.answerProcessing = true;
+                
                 let correct = false;
                 
                 if (question.type === 'qcm') {
@@ -3924,15 +5574,27 @@
                 
                 if (correct) {
                     quiz.score++;
-                    // Récompense en pièces pour bonne réponse
+                    // Récompense en pièces et XP pour bonne réponse
                     const coinsEarned = question.coins || 5; // 5 pièces par défaut si pas défini
+                    const xpEarned = Math.floor(coinsEarned / 2) + 2; // XP basé sur les pièces + bonus
                     this.coins += coinsEarned;
+                    this.addXP(xpEarned);
                     quiz.totalCoinsEarned = (quiz.totalCoinsEarned || 0) + coinsEarned;
-                    this.showNotification(`+${coinsEarned} pièces ! 🎉`);
+                    quiz.totalXpEarned = (quiz.totalXpEarned || 0) + xpEarned;
+                    this.showNotification(`+${coinsEarned}💰 +${xpEarned}⭐ ! 🎉`);
+                    
+                    // Progression des quêtes pour réponses correctes
+                    this.updateQuestProgress('correct_answers', quiz.subject);
+                    
                     this.saveGameData(); // Sauvegarder immédiatement
                 }
                 
                 this.showVideoAnswerFeedback(correct, question);
+                
+                // Remettre le flag à false après traitement
+                setTimeout(() => {
+                    quiz.answerProcessing = false;
+                }, 500);
             }
 
             showVideoAnswerFeedback(correct, question) {
@@ -3963,7 +5625,8 @@
                 
                 if (correct) {
                     this.coins += 15;
-                    document.getElementById('coinCounter').textContent = this.coins;
+                    this.updateCoinAndXpDisplay();
+                    this.updateQuestProgress('earn_coins', 'all', 15);
                 }
             }
 
@@ -3990,7 +5653,14 @@
                 this.subjects[quiz.subject].stars = Math.max(this.subjects[quiz.subject].stars, newStars);
                 
                 this.coins += bonusCoins;
-                document.getElementById('coinCounter').textContent = this.coins;
+                this.updateCoinAndXpDisplay();
+                
+                // Progression des quêtes
+                this.updateQuestProgress('quiz_complete', quiz.subject);
+                if (percentage === 100) {
+                    this.updateQuestProgress('perfect_quizzes', 'all');
+                }
+                this.updateQuestProgress('earn_coins', 'all', bonusCoins + (quiz.totalCoinsEarned || 0));
                 
                 let message = '';
                 if (percentage === 100) message = 'PARFAIT ! Tu as tout compris ! 🏆';
@@ -4132,6 +5802,26 @@
         function selectCharacterFromInventory(character) {
             if (window.platform) window.platform.selectCharacterFromInventory(character);
         }
+
+        function closeCharacterUnlockPage() {
+            if (window.platform) window.platform.closeCharacterUnlockPage();
+        }
+
+        function openQuests() {
+            if (window.platform) window.platform.openQuests();
+        }
+
+        function startQuest(questIndex) {
+            if (window.platform) window.platform.startQuest(questIndex);
+        }
+
+        function claimTimelineReward(milestoneIndex) {
+            if (window.platform) window.platform.claimTimelineReward(milestoneIndex);
+        }
+
+        function closeCinematic() {
+            if (window.platform) window.platform.closeCinematic();
+        }
         
         function openProfileSetup() {
             if (window.platform) window.platform.openProfileSetup();
@@ -4213,6 +5903,170 @@
         window.platform = null;
         document.addEventListener('DOMContentLoaded', function() {
             window.platform = new LearningPlatform();
+            console.log('✅ Platform chargé avec succès!');
+        });
+        
+        // Fallback de sécurité (au cas où)
+        window.addEventListener('error', function() {
+            if (!window.platform) {
+                console.log('🔄 Chargement du fallback...');
+                window.platform = {
+                    coins: 0,
+                    xp: 0,
+                    level: 1,
+                    
+                    updateDisplay: function() {
+                        const coinCounter = document.getElementById('coinCounter');
+                        const xpDisplay = document.getElementById('xpDisplay');
+                        if (coinCounter) coinCounter.textContent = this.coins;
+                        if (xpDisplay) xpDisplay.textContent = `⭐${this.xp} 🏆${this.level}`;
+                    },
+                    
+                    addCoins: function(amount) {
+                        this.coins += amount;
+                        this.updateDisplay();
+                    },
+                    
+                    addXP: function(amount) {
+                        this.xp += amount;
+                        const newLevel = Math.floor(this.xp / 100) + 1;
+                        if (newLevel > this.level) {
+                            this.level = newLevel;
+                            this.addCoins(50);
+                            alert(`🎉 NIVEAU SUPÉRIEUR! Tu es maintenant 🏆${this.level}! +50 pièces bonus!`);
+                        }
+                        this.updateDisplay();
+                    },
+                    
+                    createModal: function(content) {
+                        const modal = document.createElement('div');
+                        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                        modal.innerHTML = `
+                            <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 p-6 max-h-90vh overflow-y-auto">
+                                ${content}
+                            </div>
+                        `;
+                        document.body.appendChild(modal);
+                        modal.addEventListener('click', (e) => {
+                            if (e.target === modal) modal.remove();
+                        });
+                        return modal;
+                    },
+                    
+                    openShop: function() {
+                        this.createModal(`
+                            <h2 class="text-2xl font-bold mb-4">🏪 Boutique</h2>
+                            <div class="grid grid-cols-2 gap-4 mb-4">
+                                <div class="border rounded-lg p-4 text-center">
+                                    <div class="text-4xl mb-2">🎁</div>
+                                    <h3 class="font-bold">Boîte Mystère</h3>
+                                    <p class="text-sm text-gray-600">50 pièces</p>
+                                    <button onclick="window.platform.buyMysteryBox()" class="mt-2 bg-blue-500 text-white px-4 py-2 rounded">Acheter</button>
+                                </div>
+                                <div class="border rounded-lg p-4 text-center">
+                                    <div class="text-4xl mb-2">🐲</div>
+                                    <h3 class="font-bold">Dragon Rare</h3>
+                                    <p class="text-sm text-gray-600">200 pièces</p>
+                                    <button onclick="alert('Pas assez de pièces!')" class="mt-2 bg-gray-400 text-white px-4 py-2 rounded">Acheter</button>
+                                </div>
+                            </div>
+                            <button onclick="this.closest('.fixed').remove()" class="bg-gray-500 text-white px-4 py-2 rounded">Fermer</button>
+                        `);
+                    },
+                    
+                    buyMysteryBox: function() {
+                        if (this.coins >= 50) {
+                            this.coins -= 50;
+                            this.addXP(10);
+                            const characters = ['🐁', '🐸', '🐟', '🐦', '🐰', '🐢'];
+                            const randomChar = characters[Math.floor(Math.random() * characters.length)];
+                            alert(`🎉 Tu as reçu: ${randomChar} +10 XP!`);
+                            this.updateDisplay();
+                        } else {
+                            alert('Pas assez de pièces! Il te faut 50 pièces.');
+                        }
+                    },
+                    
+                    openInventory: function() {
+                        this.createModal(`
+                            <h2 class="text-2xl font-bold mb-4">🎒 Inventaire</h2>
+                            <div class="grid grid-cols-4 gap-4 mb-4">
+                                <div class="border rounded-lg p-4 text-center bg-blue-50">
+                                    <div class="text-4xl mb-2">🤖</div>
+                                    <p class="text-sm">Robot</p>
+                                </div>
+                                <div class="border rounded-lg p-4 text-center">
+                                    <div class="text-4xl mb-2">🐁</div>
+                                    <p class="text-sm">Souris</p>
+                                </div>
+                            </div>
+                            <button onclick="this.closest('.fixed').remove()" class="bg-gray-500 text-white px-4 py-2 rounded">Fermer</button>
+                        `);
+                    },
+                    
+                    openQuests: function() {
+                        this.createModal(`
+                            <h2 class="text-2xl font-bold mb-4">🏹 Quêtes</h2>
+                            <div class="space-y-4 mb-4">
+                                <div class="border rounded-lg p-4 bg-green-50">
+                                    <h3 class="font-bold">🎯 Première Réponse</h3>
+                                    <p class="text-sm text-gray-600">Réponds correctement à une question</p>
+                                    <div class="mt-2">
+                                        <span class="text-sm bg-green-200 px-2 py-1 rounded">Terminée!</span>
+                                        <span class="ml-2">💰25 ⭐10</span>
+                                    </div>
+                                </div>
+                                <div class="border rounded-lg p-4">
+                                    <h3 class="font-bold">📚 Étudiant Assidu</h3>
+                                    <p class="text-sm text-gray-600">Termine 5 leçons</p>
+                                    <div class="mt-2">
+                                        <div class="bg-gray-200 rounded-full h-2 mb-1">
+                                            <div class="bg-blue-500 h-2 rounded-full" style="width: 40%"></div>
+                                        </div>
+                                        <span class="text-sm">2/5 progrès</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button onclick="this.closest('.fixed').remove()" class="bg-gray-500 text-white px-4 py-2 rounded">Fermer</button>
+                        `);
+                    },
+                    
+                    openProfileSetup: function() {
+                        this.createModal(`
+                            <h2 class="text-2xl font-bold mb-4">👤 Mon Profil</h2>
+                            <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6 mb-6">
+                                <div class="text-6xl mb-4">🎓</div>
+                                <h4 class="text-xl font-bold text-gray-800 mb-2">Visiteur</h4>
+                                <p class="text-gray-600 mb-4">Classe : CP</p>
+                                <div class="flex items-center justify-center gap-4">
+                                    <div class="flex items-center gap-2 text-yellow-600">
+                                        <span class="font-bold">💰${this.coins}</span>
+                                    </div>
+                                    <div class="flex items-center gap-2 text-blue-600">
+                                        <span class="font-bold">⭐${this.xp} 🏆${this.level}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button onclick="this.closest('.fixed').remove()" class="bg-gray-500 text-white px-4 py-2 rounded">Fermer</button>
+                        `);
+                    },
+                    
+                    selectClass: function(className) {
+                        console.log('Classe sélectionnée:', className);
+                        document.querySelectorAll('.class-btn').forEach(btn => {
+                            btn.classList.remove('bg-blue-500', 'text-white');
+                            btn.classList.add('bg-gray-100', 'text-gray-600');
+                        });
+                        const selectedBtn = document.querySelector(`[data-class="${className}"]`);
+                        if (selectedBtn) {
+                            selectedBtn.classList.add('bg-blue-500', 'text-white');
+                            selectedBtn.classList.remove('bg-gray-100', 'text-gray-600');
+                        }
+                    }
+                };
+                // Initialiser l'affichage
+                setTimeout(() => window.platform.updateDisplay(), 100);
+            }
         });
     </script>
 </body>
