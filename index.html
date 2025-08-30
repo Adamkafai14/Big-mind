@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apprends en Jouant !</title>
+    <title>Big Mind</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -301,20 +301,59 @@
         .notification.show {
             transform: translateX(0);
         }
+
+        /* Logo Animation */
+        .logo-container svg {
+            transition: transform 0.3s ease;
+        }
+        
+        .logo-container:hover svg {
+            transform: scale(1.1) rotate(5deg);
+        }
+        
+        @keyframes logoGlow {
+            0%, 100% { filter: drop-shadow(0 0 5px rgba(102, 126, 234, 0.3)); }
+            50% { filter: drop-shadow(0 0 15px rgba(102, 126, 234, 0.6)); }
+        }
+        
+        .logo-container svg {
+            animation: logoGlow 3s ease-in-out infinite;
+        }
+
+        /* Arrêter seulement l'animation du personnage */
+        #characterAvatar {
+            animation: none !important;
+        }
+        
+        /* Arrêter les animations de rotation des pièces */
+        #coinCounter ~ i {
+            animation: none !important;
+            transform: none !important;
+        }
+
     </style>
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-purple-50 font-poppins min-h-screen">
     <!-- Header -->
     <header class="bg-white shadow-lg sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between h-16">
+            <div class="flex items-center justify-between h-16 mobile-header">
                 <!-- Logo -->
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
-                        <h1 class="text-2xl font-bold text-fun-blue font-comic">
-                            <i class="fas fa-graduation-cap mr-2"></i>
-                            Apprends en Jouant !
-                        </h1>
+                        <div class="flex items-center">
+                            <div class="logo-container">
+                                <img src="logo.png" 
+                                     alt="BigMind Logo" 
+                                     width="60" 
+                                     height="60" 
+                                     class="mr-3 rounded-lg"/>
+                            </div>
+                            <div>
+                                <h1 class="text-2xl font-bold text-fun-blue font-comic m-0">Big Mind</h1>
+                                <p class="text-xs text-fun-purple font-medium m-0 opacity-75">Apprends en jouant !</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -339,7 +378,7 @@
                     </div>
                 </nav>
 
-                <!-- Coin Counter -->
+                <!-- Coin Counter et Menu Mobile -->
                 <div class="flex items-center">
                     <div class="bg-fun-yellow text-white px-3 py-2 rounded-full flex items-center hover-bounce mr-3">
                         <i class="fas fa-coins mr-2 text-lg"></i>
@@ -348,18 +387,87 @@
                     <div class="bg-blue-500 text-white px-3 py-2 rounded-full flex items-center hover-bounce">
                         <span class="font-bold" id="xpDisplay">⭐0 🏆1</span>
                     </div>
+                    
+                    <!-- Bouton hamburger mobile -->
+                    <button class="md:hidden ml-4 p-2 text-gray-600 hover:text-gray-900 focus:outline-none" onclick="toggleMobileMenu()" id="mobileMenuBtn">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="hamburgerIcon">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                        <svg class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="closeIcon">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- Mobile menu -->
-        <div class="md:hidden">
-            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                <a href="#" class="text-fun-blue block px-3 py-2 rounded-md text-base font-medium">Accueil</a>
-                <a href="#" onclick="openShop()" class="text-gray-600 hover:text-fun-orange block px-3 py-2 rounded-md text-base font-medium">Boutique</a>
-                <a href="#" onclick="openInventory()" class="text-gray-600 hover:text-fun-purple block px-3 py-2 rounded-md text-base font-medium"><i class="fas fa-backpack mr-2"></i>Inventaire</a>
-                <a href="#" onclick="openQuests()" class="text-gray-600 hover:text-fun-blue block px-3 py-2 rounded-md text-base font-medium"><i class="fas fa-scroll mr-2"></i>Quêtes</a>
-                <a href="#" onclick="openProfileSetup()" class="text-gray-600 hover:text-fun-green block px-3 py-2 rounded-md text-base font-medium">Mon Profil</a>
+        <!-- Menu mobile plein écran -->
+        <div id="mobileMenuOverlay" class="md:hidden fixed inset-0 bg-gradient-to-br from-fun-blue to-fun-purple bg-opacity-95 backdrop-blur-sm z-50 transform -translate-x-full transition-transform duration-300">
+            <div class="flex flex-col h-full">
+                <!-- Header du menu -->
+                <div class="flex items-center justify-between p-6 border-b border-white border-opacity-20">
+                    <h2 class="text-2xl font-bold text-white">🧠 Big Mind</h2>
+                    <button onclick="toggleMobileMenu()" class="text-white p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Stats utilisateur -->
+                <div class="p-6 text-center border-b border-white border-opacity-20">
+                    <div class="text-white mb-4">
+                        <div class="text-4xl mb-2">🎓</div>
+                        <p class="text-xl font-semibold" id="mobileUserName">Visiteur</p>
+                        <div class="flex justify-center gap-4 mt-3">
+                            <div class="bg-white bg-opacity-20 rounded-full px-4 py-2">
+                                <span class="text-yellow-300">💰</span>
+                                <span class="font-bold ml-1" id="mobileCoinCount">0</span>
+                            </div>
+                            <div class="bg-white bg-opacity-20 rounded-full px-4 py-2">
+                                <span class="text-blue-200" id="mobileXpCount">⭐0 🏆1</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Menu navigation -->
+                <div class="flex-1 px-6 py-8">
+                    <nav class="space-y-4">
+                        <a href="#" onclick="toggleMobileMenu()" class="mobile-menu-item">
+                            <i class="fas fa-home text-xl"></i>
+                            <span>Accueil</span>
+                            <i class="fas fa-chevron-right text-sm opacity-50"></i>
+                        </a>
+                        <a href="#" onclick="openShop(); toggleMobileMenu();" class="mobile-menu-item">
+                            <i class="fas fa-store text-xl"></i>
+                            <span>Boutique</span>
+                            <i class="fas fa-chevron-right text-sm opacity-50"></i>
+                        </a>
+                        <a href="#" onclick="openInventory(); toggleMobileMenu();" class="mobile-menu-item">
+                            <i class="fas fa-backpack text-xl"></i>
+                            <span>Inventaire</span>
+                            <i class="fas fa-chevron-right text-sm opacity-50"></i>
+                        </a>
+                        <a href="#" onclick="openQuests(); toggleMobileMenu();" class="mobile-menu-item">
+                            <i class="fas fa-scroll text-xl"></i>
+                            <span>Quêtes</span>
+                            <i class="fas fa-chevron-right text-sm opacity-50"></i>
+                        </a>
+                        <a href="#" onclick="openProfileSetup(); toggleMobileMenu();" class="mobile-menu-item">
+                            <i class="fas fa-user text-xl"></i>
+                            <span>Mon Profil</span>
+                            <i class="fas fa-chevron-right text-sm opacity-50"></i>
+                        </a>
+                    </nav>
+                </div>
+                
+                <!-- Footer du menu -->
+                <div class="p-6 border-t border-white border-opacity-20">
+                    <p class="text-white text-center opacity-70 text-sm">
+                        🎉 Continue ton aventure d'apprentissage !
+                    </p>
+                </div>
             </div>
         </div>
     </header>
@@ -503,15 +611,46 @@
     <footer class="bg-white shadow-lg mt-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
             <div class="text-center text-gray-600">
-                <p>&copy; 2024 Apprends en Jouant ! - Apprentissage ludique pour tous</p>
+                <p>&copy; 2024 Big Mind - Apprentissage ludique pour tous</p>
             </div>
         </div>
     </footer>
 
     <script>
+        // Détecteur d'appareil automatique
+        class DeviceDetector {
+            static isMobile() {
+                return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+                    || window.innerWidth <= 768
+                    || ('ontouchstart' in window);
+            }
+            
+            static isTablet() {
+                return /iPad|Android/i.test(navigator.userAgent) && window.innerWidth >= 768 && window.innerWidth <= 1024;
+            }
+            
+            static isDesktop() {
+                return !this.isMobile() && !this.isTablet();
+            }
+            
+            static getDeviceType() {
+                if (this.isMobile()) return 'mobile';
+                if (this.isTablet()) return 'tablet';
+                return 'desktop';
+            }
+        }
+
         // Enhanced JavaScript functionality
         class LearningPlatform {
             constructor() {
+                // Détecter automatiquement l'appareil
+                this.deviceType = DeviceDetector.getDeviceType();
+                this.isMobile = DeviceDetector.isMobile();
+                console.log(`📱 Appareil détecté: ${this.deviceType}`);
+                
+                // Appliquer les styles selon l'appareil
+                this.applyDeviceStyles();
+                
                 // Charger les données sauvegardées ou utiliser les valeurs par défaut
                 this.loadGameData();
                 
@@ -522,41 +661,454 @@
                 this.videoQuizzes = this.initializeVideoQuizzes();
                 this.currentQuiz = null;
                 
+                // Système de potions (séparé)
+                
                 // Sauvegarder automatiquement toutes les 30 secondes
                 this.startAutoSave();
                 
                 this.init();
+                
+                // Écouter les changements de taille d'écran
+                window.addEventListener('resize', () => {
+                    clearTimeout(this.resizeTimeout);
+                    this.resizeTimeout = setTimeout(() => {
+                        this.handleScreenSizeChange();
+                    }, 250);
+                });
+                
+                // Gestionnaires pour le menu mobile
+                this.initMobileMenuHandlers();
+            }
+            
+            handleScreenSizeChange() {
+                const oldDeviceType = this.deviceType;
+                const newDeviceType = DeviceDetector.getDeviceType();
+                const newIsMobile = DeviceDetector.isMobile();
+                
+                if (oldDeviceType !== newDeviceType || this.isMobile !== newIsMobile) {
+                    console.log(`🔄 Changement d'appareil: ${oldDeviceType} → ${newDeviceType}`);
+                    
+                    // Supprimer l'ancienne classe
+                    document.body.classList.remove(`device-${oldDeviceType}`);
+                    
+                    // Mettre à jour les propriétés
+                    this.deviceType = newDeviceType;
+                    this.isMobile = newIsMobile;
+                    
+                    // Appliquer les nouveaux styles
+                    this.applyDeviceStyles();
+                    
+                    // Mettre à jour l'affichage
+                    this.updateDisplay();
+                }
+            }
+            
+            // Appliquer les styles automatiquement selon l'appareil
+            applyDeviceStyles() {
+                const body = document.body;
+                
+                // Ajouter la classe d'appareil au body
+                body.classList.add(`device-${this.deviceType}`);
+                
+                if (this.isMobile) {
+                    // Styles mobiles automatiques
+                    this.applyMobileStyles();
+                } else {
+                    // Styles desktop automatiques  
+                    this.applyDesktopStyles();
+                }
+            }
+            
+            applyMobileStyles() {
+                const style = document.createElement('style');
+                style.textContent = `
+                    .device-mobile {
+                        font-size: 16px !important;
+                    }
+                    
+                    .device-mobile .max-w-7xl {
+                        padding-left: 1rem !important;
+                        padding-right: 1rem !important;
+                    }
+                    
+                    .device-mobile .grid-cols-2 {
+                        grid-template-columns: 1fr !important;
+                    }
+                    
+                    .device-mobile .hover-zoom {
+                        padding: 1rem !important;
+                        margin-bottom: 1rem !important;
+                    }
+                    
+                    .device-mobile .bg-fun-yellow,
+                    .device-mobile .bg-blue-500 {
+                        padding: 0.5rem 0.75rem !important;
+                        font-size: 0.8rem !important;
+                    }
+                    
+                    .device-mobile .flex.items-center:last-child {
+                        flex-wrap: wrap !important;
+                        gap: 0.25rem !important;
+                    }
+                    
+                    .device-mobile h1.text-2xl {
+                        font-size: 1.25rem !important;
+                        line-height: 1.2 !important;
+                    }
+                    
+                    .device-mobile .h-16 {
+                        height: auto !important;
+                        min-height: 4rem !important;
+                        padding: 0.5rem 0 !important;
+                    }
+                    
+                    .device-mobile .justify-between {
+                        align-items: flex-start !important;
+                        gap: 0.5rem !important;
+                    }
+                    
+                    .device-mobile .mobile-header {
+                        flex-direction: column !important;
+                        align-items: stretch !important;
+                        height: auto !important;
+                        padding: 0.75rem 0 !important;
+                        gap: 0.75rem !important;
+                    }
+                    
+                    .device-mobile .mobile-header > div:first-child {
+                        display: flex !important;
+                        justify-content: center !important;
+                        align-items: center !important;
+                    }
+                    
+                    .device-mobile .mobile-header > div:last-child {
+                        display: flex !important;
+                        justify-content: center !important;
+                        align-items: center !important;
+                        flex-wrap: wrap !important;
+                        gap: 0.5rem !important;
+                    }
+                    
+                    .device-mobile .text-6xl {
+                        font-size: 3rem !important;
+                    }
+                    
+                    .device-mobile .text-4xl {
+                        font-size: 2rem !important;
+                    }
+                    
+                    .device-mobile .text-2xl {
+                        font-size: 1.5rem !important;
+                    }
+                    
+                    .device-mobile .modal-content {
+                        margin: 1rem !important;
+                        max-height: 90vh !important;
+                        overflow-y: auto !important;
+                    }
+                    
+                    .device-mobile .fixed {
+                        padding: 0.5rem !important;
+                    }
+                    
+                    .device-mobile button {
+                        padding: 0.75rem 1.5rem !important;
+                        font-size: 1rem !important;
+                        min-height: 44px !important;
+                    }
+                    
+                    .device-mobile .grid-cols-4 {
+                        grid-template-columns: repeat(2, 1fr) !important;
+                        gap: 0.75rem !important;
+                    }
+                    
+                    /* Styles modales mobiles */
+                    .mobile-modal {
+                        position: fixed !important;
+                        top: 0 !important;
+                        left: 0 !important;
+                        width: 100% !important;
+                        height: 100% !important;
+                        background: rgba(0,0,0,0.8) !important;
+                        z-index: 1000 !important;
+                    }
+                    
+                    .mobile-modal-content {
+                        position: absolute !important;
+                        bottom: 0 !important;
+                        left: 0 !important;
+                        width: 100% !important;
+                        max-height: 90vh !important;
+                        background: white !important;
+                        border-radius: 20px 20px 0 0 !important;
+                        overflow-y: auto !important;
+                        animation: slideUp 0.3s ease-out !important;
+                    }
+                    
+                    .mobile-modal-header {
+                        position: sticky !important;
+                        top: 0 !important;
+                        background: white !important;
+                        padding: 1rem !important;
+                        border-bottom: 1px solid #e5e5e5 !important;
+                        text-align: right !important;
+                        border-radius: 20px 20px 0 0 !important;
+                    }
+                    
+                    .mobile-close-btn {
+                        background: #f3f4f6 !important;
+                        border: none !important;
+                        width: 40px !important;
+                        height: 40px !important;
+                        border-radius: 50% !important;
+                        font-size: 1.5rem !important;
+                        display: flex !important;
+                        align-items: center !important;
+                        justify-content: center !important;
+                        cursor: pointer !important;
+                        color: #6b7280 !important;
+                    }
+                    
+                    .mobile-modal-body {
+                        padding: 1.5rem !important;
+                    }
+                    
+                    @keyframes slideUp {
+                        from { transform: translateY(100%); }
+                        to { transform: translateY(0); }
+                    }
+                    
+                    /* Menu mobile plein écran */
+                    .mobile-menu-item {
+                        display: flex !important;
+                        align-items: center !important;
+                        justify-content: space-between !important;
+                        padding: 1rem 1.5rem !important;
+                        color: white !important;
+                        text-decoration: none !important;
+                        border-radius: 12px !important;
+                        background: rgba(255, 255, 255, 0.1) !important;
+                        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+                        transition: all 0.3s ease !important;
+                        font-size: 1.1rem !important;
+                        font-weight: 500 !important;
+                    }
+                    
+                    .mobile-menu-item:hover,
+                    .mobile-menu-item:active {
+                        background: rgba(255, 255, 255, 0.2) !important;
+                        transform: translateX(8px) !important;
+                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+                    }
+                    
+                    .mobile-menu-item i:first-child {
+                        width: 24px !important;
+                        color: rgba(255, 255, 255, 0.9) !important;
+                    }
+                    
+                    .mobile-menu-item span {
+                        flex: 1 !important;
+                        margin-left: 1rem !important;
+                        text-align: left !important;
+                    }
+                    
+                    #mobileMenuOverlay.menu-open {
+                        transform: translateX(0) !important;
+                    }
+                    
+                    /* Styles boutique et potions */
+                    .shop-tab {
+                        background: transparent !important;
+                        color: #6b7280 !important;
+                    }
+                    
+                    .shop-tab.active {
+                        background: white !important;
+                        color: #3b82f6 !important;
+                        box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+                    }
+                    
+                    .potion-card {
+                        transition: all 0.3s ease !important;
+                    }
+                    
+                    .potion-card:hover {
+                        transform: translateY(-4px) !important;
+                    }
+                    
+                    .potion-bounce {
+                        animation: potionBounce 2s ease-in-out infinite !important;
+                    }
+                    
+                    @keyframes potionBounce {
+                        0%, 100% { transform: translateY(0) rotate(0deg); }
+                        25% { transform: translateY(-10px) rotate(5deg); }
+                        50% { transform: translateY(-5px) rotate(0deg); }
+                        75% { transform: translateY(-10px) rotate(-5deg); }
+                    }
+                    
+                    /* Animations cinématique potions */
+                    .potion-glow {
+                        animation: potionGlow 2s ease-in-out infinite !important;
+                        filter: drop-shadow(0 0 20px rgba(147, 51, 234, 0.6)) !important;
+                    }
+                    
+                    .effect-glow {
+                        animation: effectPulse 2s ease-in-out infinite !important;
+                    }
+                    
+                    .magic-particles {
+                        position: relative !important;
+                        height: 40px !important;
+                    }
+                    
+                    .particle {
+                        position: absolute !important;
+                        animation: sparkle 1.5s ease-in-out infinite !important;
+                        font-size: 1.5rem !important;
+                    }
+                    
+                    .particle:nth-child(1) { left: 10%; animation-delay: 0s !important; }
+                    .particle:nth-child(2) { left: 25%; animation-delay: 0.3s !important; }
+                    .particle:nth-child(3) { left: 50%; animation-delay: 0.6s !important; }
+                    .particle:nth-child(4) { left: 75%; animation-delay: 0.9s !important; }
+                    .particle:nth-child(5) { left: 90%; animation-delay: 1.2s !important; }
+                    
+                    @keyframes potionGlow {
+                        0%, 100% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 20px rgba(147, 51, 234, 0.6)); }
+                        50% { transform: scale(1.1) rotate(10deg); filter: drop-shadow(0 0 30px rgba(147, 51, 234, 0.9)); }
+                    }
+                    
+                    @keyframes effectPulse {
+                        0%, 100% { box-shadow: 0 0 20px rgba(147, 51, 234, 0.3); }
+                        50% { box-shadow: 0 0 40px rgba(147, 51, 234, 0.6); }
+                    }
+                    
+                    .inventory-tab {
+                        background: transparent !important;
+                        color: #6b7280 !important;
+                    }
+                    
+                    .inventory-tab.active {
+                        background: white !important;
+                        color: #3b82f6 !important;
+                        box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
+                    }
+                `;
+                document.head.appendChild(style);
+                
+                // Optimisations tactiles mobiles
+                this.addTouchOptimizations();
+                
+                // Vérifier l'orientation
+                window.addEventListener('orientationchange', () => {
+                    setTimeout(() => this.handleOrientationChange(), 100);
+                });
+                
+                // Prévenir le zoom sur double-tap
+                document.addEventListener('touchstart', (e) => {
+                    if (e.touches.length > 1) {
+                        e.preventDefault();
+                    }
+                });
+                
+                let lastTouchEnd = 0;
+                document.addEventListener('touchend', (e) => {
+                    const now = (new Date()).getTime();
+                    if (now - lastTouchEnd <= 300) {
+                        e.preventDefault();
+                    }
+                    lastTouchEnd = now;
+                }, false);
+            }
+            
+            applyDesktopStyles() {
+                const style = document.createElement('style');
+                style.textContent = `
+                    .device-desktop .hover-zoom:hover {
+                        transform: scale(1.05) translateY(-5px);
+                        transition: all 0.3s ease;
+                    }
+                    
+                    .device-desktop #xpDisplay:hover,
+                    .device-desktop #coinCounter:hover {
+                        transform: scale(1.05);
+                        cursor: pointer;
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            addTouchOptimizations() {
+                // Améliorer les interactions tactiles
+                const style = document.createElement('style');
+                style.textContent = `
+                    .device-mobile * {
+                        -webkit-tap-highlight-color: rgba(0,0,0,0.1) !important;
+                        -webkit-touch-callout: none !important;
+                        -webkit-user-select: none !important;
+                        user-select: none !important;
+                    }
+                    
+                    .device-mobile button,
+                    .device-mobile .hover-zoom,
+                    .device-mobile [onclick] {
+                        touch-action: manipulation !important;
+                        -webkit-tap-highlight-color: rgba(59, 130, 246, 0.3) !important;
+                    }
+                    
+                    .device-mobile input,
+                    .device-mobile textarea,
+                    .device-mobile select {
+                        -webkit-user-select: text !important;
+                        user-select: text !important;
+                    }
+                    
+                    .device-mobile .hover-zoom:active {
+                        transform: scale(0.95) !important;
+                        transition: transform 0.1s !important;
+                    }
+                    
+                    .device-mobile button:active {
+                        transform: scale(0.95) !important;
+                        transition: transform 0.1s !important;
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            handleOrientationChange() {
+                // Recalculer le type d'appareil après rotation
+                const newDeviceType = DeviceDetector.getDeviceType();
+                if (newDeviceType !== this.deviceType) {
+                    document.body.classList.remove(`device-${this.deviceType}`);
+                    this.deviceType = newDeviceType;
+                    this.isMobile = DeviceDetector.isMobile();
+                    this.applyDeviceStyles();
+                }
             }
             
             loadGameData() {
                 try {
                     const savedData = localStorage.getItem('learningPlatformData');
+                    console.log('📂 CHARGEMENT - savedData exists:', !!savedData);
+                    
                     if (savedData) {
+                        console.log('📂 Raw localStorage data:', savedData.substring(0, 200) + '...');
                         const data = JSON.parse(savedData);
+                        console.log('📂 Parsed data inventory:', data.inventory);
+                        console.log('📂 Parsed data coins:', data.coins);
                         
-                        // Nettoyer les données de test si présentes
+                        // DÉSACTIVÉ: Plus de nettoyage automatique des données
+                        // Les pièces et les quêtes ne se réinitialisent plus
+                        /*
                         if (data.coins === 1000 && !data.hasCreatedProfile) {
                             console.log('🧹 Nettoyage des données de test détectées');
                             localStorage.removeItem('learningPlatformData');
-                            // Recharger avec des données par défaut
-                            this.coins = 0;
-                            this.studentName = 'Visiteur';
-                            this.studentAge = null;
-                            this.currentCharacter = 'robot';
-                            this.inventory = ['robot'];
-                            this.dailyBonusClaimed = false;
-                            this.selectedClass = 'cp';
-                            this.hasCreatedProfile = false;
-                            this.subjects = {
-                                math: { progress: 0, stars: 0 },
-                                french: { progress: 0, stars: 0 },
-                                science: { progress: 0, stars: 0 },
-                                histgeo: { progress: 0, stars: 0 }
-                            };
-                            this.saveGameData();
-                            this.showNotificationOnLoad('🆕 Données réinitialisées ! Nouveau départ ! 🎮');
+                            // Code de réinitialisation désactivé
                             return;
                         }
+                        */
                         this.coins = data.coins || 0;
                         this.xp = data.xp || 0;
                         this.level = data.level || Math.floor((this.xp || 0) / 100) + 1;
@@ -564,6 +1116,12 @@
                         this.studentAge = data.studentAge || null;
                         this.currentCharacter = data.currentCharacter || 'robot';
                         this.inventory = data.inventory || ['robot'];
+                        
+                        console.log('📥 Données chargées depuis localStorage:', {
+                            coins: this.coins,
+                            inventory: this.inventory,
+                            currentCharacter: this.currentCharacter
+                        });
                         this.dailyBonusClaimed = data.dailyBonusClaimed || false;
                         this.selectedClass = data.selectedClass || 'cp';
                         this.hasCreatedProfile = data.hasCreatedProfile || false;
@@ -580,7 +1138,7 @@
                         this.claimedRewards = data.claimedRewards || [];
                         this.currentChapter = data.currentChapter || 1;
                         this.unlockedChapters = data.unlockedChapters || [1];
-                        console.log('✅ Données chargées !', data);
+                                        console.log('✅ Données chargées !', data);
                         this.showNotificationOnLoad('Bienvenue ' + this.studentName + ' ! Tes données ont été chargées ! 🎮');
                     } else {
                         // Première visite - valeurs par défaut
@@ -663,7 +1221,11 @@
                         lastSaved: new Date().toISOString()
                     };
                     localStorage.setItem('learningPlatformData', JSON.stringify(dataToSave));
-                    console.log('💾 Données sauvegardées automatiquement');
+                    console.log('💾 Données sauvegardées:', {
+                        coins: this.coins,
+                        inventory: this.inventory,
+                        currentCharacter: this.currentCharacter
+                    });
                 } catch (error) {
                     console.error('Erreur lors de la sauvegarde:', error);
                 }
@@ -1056,6 +1618,7 @@
                     ]
                 };
             }
+            
 
             initializeVideoData() {
                 return {
@@ -2927,6 +3490,28 @@
                 this.startFloatingAnimation();
                 this.updateDisplay();
             }
+            
+            initMobileMenuHandlers() {
+                // Fermer le menu avec Escape
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        const overlay = document.getElementById('mobileMenuOverlay');
+                        if (overlay && overlay.classList.contains('menu-open')) {
+                            toggleMobileMenu();
+                        }
+                    }
+                });
+                
+                // Fermer le menu en cliquant à l'extérieur (sur le fond)
+                document.addEventListener('touchstart', (e) => {
+                    const overlay = document.getElementById('mobileMenuOverlay');
+                    if (overlay && overlay.classList.contains('menu-open')) {
+                        if (e.target === overlay) {
+                            toggleMobileMenu();
+                        }
+                    }
+                });
+            }
 
             // Mettre à jour l'affichage des pièces et XP
             updateCoinAndXpDisplay() {
@@ -3024,9 +3609,11 @@
                 return Math.floor(xp / 100) + 1; // 100 XP par niveau
             }
 
+            
             // Ajouter XP et mettre à jour le niveau
-            addXP(amount) {
+            addXP(amount, skipPotionEffects = false) {
                 const oldLevel = this.level;
+                
                 this.xp += amount;
                 this.level = this.calculateLevel(this.xp);
                 
@@ -3060,7 +3647,7 @@
                 this.saveGameData();
             }
 
-            animateCoins(amount = 10, xpAmount = 5) {
+            animateCoins(amount = 10, xpAmount = 5, skipPotionEffects = false) {
                 const coinCounter = document.getElementById('coinCounter');
                 const coinIcon = coinCounter.previousElementSibling;
                 
@@ -3207,7 +3794,8 @@
 
             openShop() {
                 const shopModal = this.createModal(`
-                    <h3 class="text-2xl font-bold mb-4 gradient-text">Boutique de Personnages</h3>
+                    <h3 class="text-2xl font-bold mb-4 gradient-text">🏢 Boutique Big Mind</h3>
+                    
                     <div class="max-h-96 overflow-y-auto mb-4">
                         <div class="mb-6">
                             <h4 class="text-lg font-bold mb-3 text-green-600">💰 Économiques (100-300 pièces)</h4>
@@ -3380,14 +3968,18 @@
                             </div>
                         </div>
                     </div>
+                    
                     <div class="border-t pt-4">
                         <p class="text-center mb-4">Tes pièces: <span class="font-bold text-yellow-600">${this.coins}</span></p>
                         <button class="w-full bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 btn-bounce" onclick="closeModal()">Fermer</button>
                     </div>
                 `);
             }
+            
 
             buyCharacter(character, cost) {
+                console.log('🛒 DÉBUT ACHAT:', { character, cost, coinsBefore: this.coins, inventoryBefore: [...this.inventory] });
+                
                 if (this.coins >= cost) {
                     this.coins -= cost;
                     this.updateCoinAndXpDisplay();
@@ -3396,10 +3988,27 @@
                     // Ajouter le personnage à l'inventaire s'il n'y est pas déjà
                     if (!this.inventory.includes(character)) {
                         this.inventory.push(character);
+                        console.log('✅ Personnage ajouté à l\'inventaire:', character);
+                    } else {
+                        console.log('⚠️ Personnage déjà dans l\'inventaire:', character);
                     }
                     
+                    console.log('🎒 Inventaire APRÈS ajout:', [...this.inventory]);
+                    
                     this.updateCharacterAvatar(character);
+                    
+                    console.log('💾 Sauvegarde en cours...');
                     this.saveGameData();
+                    
+                    // Vérifier que les données sont vraiment dans localStorage
+                    const saved = localStorage.getItem('learningPlatformData');
+                    if (saved) {
+                        const parsedData = JSON.parse(saved);
+                        console.log('🔍 Vérification localStorage après achat:', {
+                            inventoryInStorage: parsedData.inventory,
+                            coinsInStorage: parsedData.coins
+                        });
+                    }
                     
                     // Debug pour vérifier la sauvegarde
                     console.log('🎮 Achat personnage:', character);
@@ -3414,6 +4023,7 @@
                     this.showNotification(`💰 Pas assez de pièces ! Il te faut ${cost - this.coins} pièces de plus. 😔`);
                 }
             }
+            
 
             buyMysteryBox() {
                 const cost = 500;
@@ -3465,6 +4075,7 @@
                 };
                 return names[character] || character;
             }
+            
 
             showCharacterUnlockPage(character, cost, isFromMysteryBox = false) {
                 // Créer la page de déblocage en plein écran
@@ -3745,31 +4356,19 @@
                 }
             }
 
-            openInventory() {
-                const inventoryContent = this.inventory.length > 0 ? 
-                    this.inventory.map(character => {
-                        const name = this.getCharacterName(character);
-                        const icon = this.getCharacterIcon(character);
-                        const isActive = this.currentCharacter === character;
-                        return `
-                            <div class="text-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer ${isActive ? 'bg-blue-100 border-blue-300' : ''}" onclick="selectCharacterFromInventory('${character}')">
-                                <div class="text-3xl mb-1">${icon}</div>
-                                <p class="text-xs font-bold">${name.replace(/[^\w\s]/gi, '')}</p>
-                                ${isActive ? '<p class="text-xs text-blue-600">Équipé</p>' : '<p class="text-xs text-gray-500">Cliquer pour équiper</p>'}
-                            </div>
-                        `;
-                    }).join('') 
-                    : '<p class="text-center text-gray-500">Votre inventaire est vide. Achetez des personnages dans la boutique !</p>';
 
+            openInventory() {
                 const inventoryModal = this.createModal(`
-                    <h3 class="text-2xl font-bold mb-4 gradient-text">Mon Inventaire</h3>
+                    <h3 class="text-2xl font-bold mb-4 gradient-text">🎒 Mon Inventaire</h3>
+                    
                     <div class="max-h-96 overflow-y-auto mb-4">
-                        <div class="grid grid-cols-3 gap-2">
-                            ${inventoryContent}
-                        </div>
+                        ${this.generateCharacterInventory()}
                     </div>
+                    
                     <div class="border-t pt-4">
-                        <p class="text-center mb-4">Personnages possédés: <span class="font-bold text-purple-600">${this.inventory.length}</span></p>
+                        <div class="flex justify-between items-center mb-4">
+                            <span>Personnages: <span class="font-bold text-purple-600">${this.inventory.length}</span></span>
+                        </div>
                         <button class="w-full bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 btn-bounce" onclick="closeModal()">Fermer</button>
                     </div>
                 `);
@@ -3786,6 +4385,26 @@
                 };
                 return icons[character] || '❓';
             }
+            
+            generateCharacterInventory() {
+                return this.inventory.length > 0 ? 
+                    `<div class="grid grid-cols-3 gap-2">
+                        ${this.inventory.map(character => {
+                            const name = this.getCharacterName(character);
+                            const icon = this.getCharacterIcon(character);
+                            const isActive = this.currentCharacter === character;
+                            return `
+                                <div class="text-center p-3 border rounded-lg hover:bg-gray-50 cursor-pointer ${isActive ? 'bg-blue-100 border-blue-300' : ''}" onclick="selectCharacterFromInventory('${character}')">
+                                    <div class="text-3xl mb-1">${icon}</div>
+                                    <p class="text-xs font-bold">${name.replace(/[^\w\s]/gi, '')}</p>
+                                    ${isActive ? '<p class="text-xs text-blue-600">Équipé</p>' : '<p class="text-xs text-gray-500">Cliquer pour équiper</p>'}
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>` 
+                    : '<p class="text-center text-gray-500">Votre inventaire est vide. Achetez des personnages dans la boutique !</p>';
+            }
+            
 
             selectCharacterFromInventory(character) {
                 this.currentCharacter = character;
@@ -3794,6 +4413,7 @@
                 this.closeModal();
                 this.showNotification(`✨ Personnage ${this.getCharacterName(character)} équipé !`);
             }
+
 
             openQuests() {
                 // Générer les quêtes quotidiennes si nécessaire
@@ -3847,15 +4467,18 @@
                     questProgress: this.questProgress
                 });
                 
-                // Si c'est un nouveau jour, générer de nouvelles quêtes
-                if (this.lastQuestDate !== today) {
+                // DÉSACTIVÉ: Les quêtes restent les mêmes - pas de régénération quotidienne
+                // if (this.lastQuestDate !== today) {
+                
+                // Générer des quêtes seulement si c'est la première fois (pas de quêtes existantes)
+                if (this.currentQuests.length === 0) {
                     this.lastQuestDate = today;
                     this.currentQuests = [];
                     
                     // Déterminer le niveau basé sur l'âge
                     const level = this.getEducationLevel();
                     
-                    // Générer 3 quêtes quotidiennes sans doublons
+                    // Générer 3 quêtes une seule fois (pas quotidiennement)
                     const questTemplates = this.getQuestTemplates(level);
                     
                     // Mélanger les quêtes et prendre les 3 premières (garantit pas de doublons)
@@ -5062,13 +5685,30 @@
 
             createModal(content) {
                 const modal = document.createElement('div');
-                modal.className = 'modal';
+                
+                // Adaptation automatique selon l'appareil
+                if (this.isMobile) {
+                    modal.className = 'modal mobile-modal';
+                    modal.innerHTML = `
+                        <div class="modal-content mobile-modal-content">
+                            <div class="mobile-modal-header">
+                                <button onclick="this.closest('.modal').remove()" class="mobile-close-btn">×</button>
+                            </div>
+                            <div class="mobile-modal-body">
+                                ${content}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    modal.className = 'modal desktop-modal';
+                    modal.innerHTML = `
+                        <div class="modal-content desktop-modal-content">
+                            ${content}
+                        </div>
+                    `;
+                }
+                
                 modal.style.display = 'block';
-                modal.innerHTML = `
-                    <div class="modal-content">
-                        ${content}
-                    </div>
-                `;
                 document.body.appendChild(modal);
                 
                 // Close on background click
@@ -5196,7 +5836,7 @@
                         </div>
                         
                         <div class="flex gap-3 justify-center">
-                            <button class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 btn-bounce" onclick="showVideoEndPrompt('${videoId}', '${subject}', '${video.title}')">
+                            <button class="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 btn-bounce" onclick="finishWatchingVideo('${videoId}', '${subject}')">
                                 <i class="fas fa-check mr-2"></i>J'ai fini de regarder
                             </button>
                             <button class="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 btn-bounce" onclick="closeModal()">
@@ -5210,6 +5850,13 @@
             }
             
             showVideoEndPrompt(videoId, subject, video) {
+                // Stocker la vidéo courante pour l'utiliser dans les autres fonctions
+                this.currentVideo = { 
+                    id: videoId, 
+                    subject: subject, 
+                    title: video.title || video 
+                };
+                
                 this.closeModal();
                 const modal = this.createModal(`
                     <div class="text-center max-w-md mx-auto">
@@ -5457,10 +6104,78 @@
                 this.currentQuiz = null;
             }
 
+            handleVideoCompletionWithoutQuiz(videoId) {
+                console.log('🔴 Video completion sans quiz pour:', videoId);
+                
+                // Donner des récompenses de base pour avoir regardé la vidéo
+                const baseCoins = 10;
+                const baseXp = 5;
+                
+                this.coins += baseCoins;
+                this.addXP(baseXp);
+                this.updateCoinAndXpDisplay();
+                
+                // Mettre à jour la progression
+                const subject = this.currentVideo ? this.currentVideo.subject : 'math';
+                this.subjects[subject].progress = Math.min(100, this.subjects[subject].progress + 5);
+                this.updateProgressBars();
+                
+                // Quêtes
+                this.updateQuestProgress('earn_coins', 'all', baseCoins);
+                this.updateQuestProgress('lesson_complete', subject);
+                
+                this.closeModal();
+                const videoTitle = this.currentVideo ? this.currentVideo.title : 'Vidéo';
+                const modal = this.createModal(`
+                    <div class="text-center max-w-md mx-auto">
+                        <div class="mb-6">
+                            <div class="text-6xl mb-4">🎉</div>
+                            <h3 class="text-2xl font-bold mb-2 text-green-600">Vidéo terminée !</h3>
+                            <p class="text-gray-600 mb-4">Félicitations ! Tu as regardé la vidéo :</p>
+                            <p class="font-semibold text-lg text-purple-600">${videoTitle}</p>
+                        </div>
+                        
+                        <div class="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-6 mb-6 border-2 border-green-200">
+                            <div class="text-3xl mb-3">🎁</div>
+                            <h4 class="text-lg font-bold text-green-800 mb-3">Récompenses reçues !</h4>
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-center gap-2 text-yellow-600">
+                                    <i class="fas fa-coins"></i>
+                                    <span class="font-bold">+${baseCoins} pièces</span>
+                                </div>
+                                <div class="flex items-center justify-center gap-2 text-blue-600">
+                                    <span class="font-bold">+${baseXp} XP</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-yellow-50 rounded-lg p-4 mb-6 border border-yellow-200">
+                            <div class="text-2xl mb-2">🚧</div>
+                            <p class="text-sm text-yellow-800">
+                                <strong>Quiz bientôt disponible !</strong><br>
+                                Cette vidéo n'a pas encore de quiz, mais tu as quand même gagné des récompenses !
+                            </p>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <button class="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-300 btn-bounce" onclick="showVideos('${subject}')">
+                                <i class="fas fa-video mr-2"></i>Voir d'autres vidéos
+                            </button>
+                            <button class="w-full bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-medium transition-all duration-300 btn-bounce" onclick="closeModal()">
+                                <i class="fas fa-home mr-2"></i>Retour à l'accueil
+                            </button>
+                        </div>
+                    </div>
+                `);
+                
+                this.showNotification(`🎉 Vidéo terminée ! +${baseCoins}💰 +${baseXp}⭐`);
+            }
+
             startVideoQuiz(videoId) {
                 const questions = this.videoQuizzes[videoId] || [];
                 if (questions.length === 0) {
-                    this.showNotification('Aucun quiz disponible pour cette vidéo !');
+                    // Pas de quiz disponible, donner des récompenses de base
+                    this.handleVideoCompletionWithoutQuiz(videoId);
                     return;
                 }
                 
@@ -5823,6 +6538,7 @@
             if (window.platform) window.platform.closeCinematic();
         }
         
+        
         function openProfileSetup() {
             if (window.platform) window.platform.openProfileSetup();
         }
@@ -5833,6 +6549,42 @@
         
         function editProfile() {
             if (window.platform) window.platform.editProfile();
+        }
+        
+        // Fonction pour le menu mobile
+        function toggleMobileMenu() {
+            const overlay = document.getElementById('mobileMenuOverlay');
+            const hamburgerIcon = document.getElementById('hamburgerIcon');
+            const closeIcon = document.getElementById('closeIcon');
+            
+            if (overlay.classList.contains('menu-open')) {
+                // Fermer le menu
+                overlay.classList.remove('menu-open');
+                hamburgerIcon.classList.remove('hidden');
+                closeIcon.classList.add('hidden');
+                document.body.style.overflow = ''; // Restaurer le scroll
+            } else {
+                // Ouvrir le menu
+                overlay.classList.add('menu-open');
+                hamburgerIcon.classList.add('hidden');
+                closeIcon.classList.remove('hidden');
+                document.body.style.overflow = 'hidden'; // Bloquer le scroll
+                
+                // Mettre à jour les stats utilisateur dans le menu
+                updateMobileMenuStats();
+            }
+        }
+        
+        function updateMobileMenuStats() {
+            if (window.platform) {
+                const mobileUserName = document.getElementById('mobileUserName');
+                const mobileCoinCount = document.getElementById('mobileCoinCount');
+                const mobileXpCount = document.getElementById('mobileXpCount');
+                
+                if (mobileUserName) mobileUserName.textContent = window.platform.studentName || 'Visiteur';
+                if (mobileCoinCount) mobileCoinCount.textContent = window.platform.coins || '0';
+                if (mobileXpCount) mobileXpCount.textContent = `⭐${window.platform.xp || 0} 🏆${window.platform.level || 1}`;
+            }
         }
         
         function showVideos(subject) {
@@ -5860,8 +6612,31 @@
         }
         
         function showVideoEndPrompt(videoId, subject, title) {
-            if (window.platform) window.platform.showVideoEndPrompt(videoId, subject, {title: title});
+            console.log('🔵 showVideoEndPrompt appelée:', videoId, subject, title);
+            if (window.platform) {
+                window.platform.showVideoEndPrompt(videoId, subject, {title: title});
+            } else {
+                console.error('❌ Platform not available');
+            }
         }
+        
+        function finishWatchingVideo(videoId, subject) {
+            console.log('🔵 finishWatchingVideo appelée:', videoId, subject);
+            if (window.platform) {
+                // Récupérer le titre de la vidéo depuis les données
+                const videos = window.platform.videoData[subject] || [];
+                const video = videos.find(v => v.id === videoId);
+                const title = video ? video.title : 'Vidéo inconnue';
+                
+                window.platform.showVideoEndPrompt(videoId, subject, {title: title});
+            } else {
+                console.error('❌ Platform not available');
+            }
+        }
+        
+        
+        
+        
         
         function showSubjectModal(subject) {
             if (window.platform) window.platform.showSubjectModal(subject);
@@ -5895,6 +6670,10 @@
             if (window.platform) window.platform.finishQuiz();
         }
         
+        
+        
+        
+
         function closeModal() {
             if (window.platform) window.platform.closeModal();
         }
